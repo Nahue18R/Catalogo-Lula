@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <!-- Color de la barra del navegador = la franja superior del sitio -->
+  <meta name="theme-color" content="#8a6639" />
+
+  <!-- Vista previa al compartir el link por WhatsApp / redes.
+       og:image y og:url necesitan la dirección FINAL del sitio (https://…):
+       completar cuando esté publicado en Netlify. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_AR" />
+  <meta property="og:site_name" content="Lula Luján Creaciones" />
+  <meta property="og:title" content="Lula Luján Creaciones · Figuras de yeso sin pintar" />
+  <meta property="og:description" content="Figuras de yeso listas para pintar: santería, macetas, souvenirs y combos. Pedidos por WhatsApp y entregas los sábados." />
+  <meta property="og:image" content="og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="description" content="Figuras de yeso sin pintar, listas para pintar. Santería, macetas, souvenirs y más." />
+  <title>Lula Luján Creaciones – Figuras de Yeso</title>
+
+  <!-- Google Fonts: Montserrat (300, 400, 700) — igual a la tienda de referencia -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER FIJO (estilo tienda de referencia)
+       Barra superior + marca + búsqueda + carrito + chips de filtro
+  ============================================================ -->
+  <header id="main-header" role="banner">
+    <!-- Barra superior -->
+    <div class="header-adbar">Figuras de yeso sin pintar, listas para pintar · Pedidos por WhatsApp · Entregas los sábados</div>
+
+    <!-- Fila principal: marca + navegación + búsqueda + acceso al carrito -->
+    <div class="nav-head-main">
+      <div class="header-brand" id="brand-home" role="link" tabindex="0" aria-label="Ir a la página de inicio">
+        <img
+          src="logo-header.png"
+          alt="Logo Lula Luján Creaciones"
+          class="header-logo"
+          width="79"
+          height="44"
+        />
+        <div class="header-brand-text">
+          <p class="header-title">Lula Luján Creaciones</p>
+          <p class="header-subtitle">Figuras de yeso artesanales</p>
+        </div>
+      </div>
+
+      <!-- Navegación principal: Inicio / Tienda -->
+      <nav class="header-nav" aria-label="Navegación principal">
+        <button type="button" class="nav-link" data-vista="home">Inicio</button>
+        <button type="button" class="nav-link" data-vista="catalogo">Tienda</button>
+      </nav>
+
+      <div class="search-wrapper" role="search">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Buscar producto…"
+          autocomplete="off"
+          enterkeyhint="search"
+          aria-label="Buscar productos"
+        />
+      </div>
+
+      <!-- Mi cuenta (opcional: solo aparece si la API está configurada) -->
+      <button type="button" id="btn-cuenta" class="header-cart header-cuenta hidden" aria-haspopup="dialog">
+        <svg class="header-cart-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <span class="header-cart-label" id="btn-cuenta-texto">Mi cuenta</span>
+      </button>
+
+      <!-- Acceso al carrito en el header (además de la barra inferior) -->
+      <button
+        type="button"
+        id="btn-ver-carrito-top"
+        class="header-cart"
+        aria-haspopup="dialog"
+        aria-label="Ver carrito"
+      >
+        <svg class="header-cart-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="header-cart-label">Mi pedido</span>
+        <strong class="header-cart-total" id="cart-total-top">$0</strong>
+        <span id="cart-badge-top" class="cart-badge header-cart-badge hidden" aria-label="Cantidad de items en el carrito">0</span>
+      </button>
+    </div>
+
+    <!-- Chips de filtro por categoría (generados por JS) -->
+    <div class="filter-chips-wrapper" role="navigation" aria-label="Filtrar por categoría">
+      <div class="filter-chips" id="filter-chips"></div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       CONTENIDO PRINCIPAL — DOS VISTAS (estilo The Ancient Home)
+       1) Inicio: hero + destacados + categorías + cómo comprar
+       2) Tienda: lista de productos tipo colección (breadcrumb,
+          título + contador, orden, grilla y paginación)
+  ============================================================ -->
+  <main id="main-content" role="main">
+
+    <!-- Tienda en pausa (Config → tienda_abierta = NO) -->
+    <div id="banner-pausa" class="banner-pausa hidden" role="status">
+      <strong>Pedidos en pausa</strong>
+      <span id="banner-pausa-texto"></span>
+    </div>
+
+    <!-- ===================== VISTA: INICIO ===================== -->
+    <div id="view-home" class="view-home hidden">
+
+      <!-- Hero -->
+      <section class="home-hero" aria-label="Presentación de la tienda">
+        <p class="hero-kicker">Lula Luján Creaciones</p>
+        <h1 class="hero-title">Figuras de yeso <em>sin pintar</em></h1>
+        <p class="hero-subtitle">
+          Listas para pintar, regalar y revender. Pedidos por WhatsApp y entregas los sábados.
+        </p>
+        <div class="hero-actions">
+          <button type="button" class="hero-btn hero-btn-primary" id="hero-ver-catalogo">Ver catálogo</button>
+        </div>
+        <ul class="hero-badges" aria-label="Beneficios">
+          <li><span class="hero-dot" aria-hidden="true"></span>Seña del <span class="pct-sena">10%</span></li>
+          <li><span class="hero-dot" aria-hidden="true"></span>Figuras sin pintar</li>
+          <li><span class="hero-dot" aria-hidden="true"></span>Entregas los sábados</li>
+        </ul>
+      </section>
+
+      <!-- Destacados (carrusel horizontal como "Newest Arrivals") -->
+      <section class="home-section" id="home-destacados-section" aria-labelledby="home-destacados-title">
+        <div class="home-section-head">
+          <div>
+            <p class="home-section-kicker">Lo más pedido</p>
+            <h2 class="home-section-title" id="home-destacados-title">Destacados</h2>
+          </div>
+          <button type="button" class="home-view-all" id="ver-todos-destacados">Ver todos</button>
+        </div>
+        <div class="home-carousel" id="home-destacados">
+          <!-- Cards generadas por script.js -->
+        </div>
+      </section>
+
+      <!-- Categorías (tiles como "Home Decor Ideas") -->
+      <section class="home-section" aria-labelledby="home-cats-title">
+        <div class="home-section-head">
+          <div>
+            <p class="home-section-kicker">Explorá por sección</p>
+            <h2 class="home-section-title" id="home-cats-title">Categorías</h2>
+          </div>
+        </div>
+        <div class="home-categories" id="home-categories">
+          <!-- Tiles generados por script.js -->
+        </div>
+      </section>
+
+      <!-- Cómo comprar -->
+      <section class="home-section home-how" aria-labelledby="home-how-title">
+        <div class="home-section-head home-section-head-center">
+          <div>
+            <p class="home-section-kicker">Así de simple</p>
+            <h2 class="home-section-title" id="home-how-title">Cómo comprar</h2>
+          </div>
+        </div>
+        <div class="how-grid">
+          <div class="how-card">
+            <span class="how-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+            <h3 class="how-title">Elegí</h3>
+            <p class="how-text">Explorá nuestras figuras de yeso sin pintar y armá tu pedido.</p>
+          </div>
+          <div class="how-card">
+            <span class="how-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <h3 class="how-title">Pedí</h3>
+            <p class="how-text">Completá tus datos y enviá el pedido por WhatsApp con un toque.</p>
+          </div>
+          <div class="how-card">
+            <span class="how-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M16 11h3"/><path d="M2 10h20"/></svg>
+            </span>
+            <h3 class="how-title">Señá</h3>
+            <p class="how-text">Confirmás tu pedido con el <span class="pct-sena">10%</span> de seña; el resto al retirar.</p>
+          </div>
+          <div class="how-card">
+            <span class="how-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>
+            </span>
+            <h3 class="how-title">Retirá</h3>
+            <p class="how-text">Pasás a buscarlo los sábados en el punto de encuentro que elijas.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Medios de pago (estilo "We accept" de la referencia) -->
+      <section class="home-section home-payments" aria-labelledby="home-payments-title">
+        <div class="home-section-head home-section-head-center">
+          <div>
+            <p class="home-section-kicker">Pago seguro y simple</p>
+            <h2 class="home-section-title" id="home-payments-title">Medios de pago</h2>
+          </div>
+        </div>
+        <p class="home-section-lead">Tu pedido se confirma abonando el <span class="pct-sena">10%</span> de seña. Podés pagar con:</p>
+
+        <ul class="payments-row">
+          <li class="payment-item">
+            <span class="payment-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h18"/><path d="M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="m12 2 9 5H3l9-5Z"/></svg>
+            </span>
+            <span class="payment-name">Transferencia</span>
+          </li>
+          <li class="payment-item">
+            <span class="payment-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10v4M18 10v4"/><path d="M12 8.6c-1-.7-2.7-.4-2.7.9 0 2.7 5.4 1.4 5.4 4.1 0 1.3-1.8 1.8-2.9 1.1"/><path d="M12 8.6v6.8"/></svg>
+            </span>
+            <span class="payment-name">Efectivo</span>
+          </li>
+          <li class="payment-item">
+            <span class="payment-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#3483fa" d="M11.115 16.479a.93.927 0 0 1-.939-.886c-.002-.042-.006-.155-.103-.155-.04 0-.074.023-.113.059-.112.103-.254.206-.46.206a.816.814 0 0 1-.305-.066c-.535-.214-.542-.578-.521-.725.006-.038.007-.08-.02-.11l-.032-.03h-.034c-.027 0-.055.012-.093.039a.788.786 0 0 1-.454.16.7.699 0 0 1-.253-.05c-.708-.27-.65-.928-.617-1.126.005-.041-.005-.072-.03-.092l-.05-.04-.047.043a.728.726 0 0 1-.505.203.73.728 0 0 1-.732-.725c0-.4.328-.722.732-.722.364 0 .675.27.721.63l.026.195.11-.165c.01-.018.307-.46.852-.46.102 0 .21.016.316.05.434.13.508.52.519.68.008.094.075.1.09.1.037 0 .064-.024.083-.045a.746.744 0 0 1 .54-.225c.128 0 .263.03.402.09.69.293.379 1.158.374 1.167-.058.144-.061.207-.005.244l.027.013h.02c.03 0 .07-.014.134-.035.093-.032.235-.08.367-.08a.944.942 0 0 1 .94.93.936.934 0 0 1-.94.928zm7.302-4.171c-1.138-.98-3.768-3.24-4.481-3.77-.406-.302-.685-.462-.928-.533a1.559 1.554 0 0 0-.456-.07c-.182 0-.376.032-.58.095-.46.145-.918.505-1.362.854l-.023.018c-.414.324-.84.66-1.164.73a1.986 1.98 0 0 1-.43.049c-.362 0-.687-.104-.81-.258-.02-.025-.007-.066.04-.125l.008-.008 1-1.067c.783-.774 1.525-1.506 3.23-1.545h.085c1.062 0 2.12.469 2.24.524a7.03 7.03 0 0 0 3.056.724c1.076 0 2.188-.263 3.354-.795a9.135 9.11 0 0 0-.405-.317c-1.025.44-2.003.66-2.946.66-.962 0-1.925-.229-2.858-.68-.05-.022-1.22-.567-2.44-.57-.032 0-.065 0-.096.002-1.434.033-2.24.536-2.782.976-.528.013-.982.138-1.388.25-.361.1-.673.186-.979.185-.125 0-.35-.01-.37-.012-.35-.01-2.115-.437-3.518-.962-.143.1-.28.203-.415.31 1.466.593 3.25 1.053 3.812 1.089.157.01.323.027.491.027.372 0 .744-.103 1.104-.203.213-.059.446-.123.692-.17l-.196.194-1.017 1.087c-.08.08-.254.294-.14.557a.705.703 0 0 0 .268.292c.243.162.677.27 1.08.271.152 0 .297-.015.43-.044.427-.095.874-.448 1.349-.82.377-.296.913-.672 1.323-.782a1.494 1.49 0 0 1 .37-.05.611.61 0 0 1 .095.005c.27.034.533.125 1.003.472.835.62 4.531 3.815 4.566 3.846.002.002.238.203.22.537-.007.186-.11.352-.294.466a.902.9 0 0 1-.484.15.804.802 0 0 1-.428-.124c-.014-.01-1.28-1.157-1.746-1.543-.074-.06-.146-.115-.22-.115a.122.122 0 0 0-.096.045c-.073.09.01.212.105.294l1.48 1.47c.002 0 .184.17.204.395.012.244-.106.447-.35.606a.957.955 0 0 1-.526.171.766.764 0 0 1-.42-.127l-.214-.206a21.035 20.978 0 0 0-1.08-1.009c-.072-.058-.148-.112-.221-.112a.127.127 0 0 0-.094.038c-.033.037-.056.103.028.212a.698.696 0 0 0 .075.083l1.078 1.198c.01.01.222.26.024.511l-.038.048a1.18 1.178 0 0 1-.1.096c-.184.15-.43.164-.527.164a.8.798 0 0 1-.147-.012c-.106-.018-.178-.048-.212-.089l-.013-.013c-.06-.06-.602-.609-1.054-.98-.059-.05-.133-.11-.21-.11a.128.128 0 0 0-.096.042c-.09.096.044.24.1.293l.92 1.003a.204.204 0 0 1-.033.062c-.033.044-.144.155-.479.196a.91.907 0 0 1-.122.007c-.345 0-.712-.164-.902-.264a1.343 1.34 0 0 0 .13-.576 1.368 1.365 0 0 0-1.42-1.357c.024-.342-.025-.99-.697-1.274a1.455 1.452 0 0 0-.575-.125c-.146 0-.287.025-.42.075a1.153 1.15 0 0 0-.671-.564 1.52 1.515 0 0 0-.494-.085c-.28 0-.537.08-.767.242a1.168 1.165 0 0 0-.903-.43 1.173 1.17 0 0 0-.82.335c-.287-.217-1.425-.93-4.467-1.613a17.39 17.344 0 0 1-.692-.189 4.822 4.82 0 0 0-.077.494l.67.157c3.108.682 4.136 1.391 4.309 1.525a1.145 1.142 0 0 0-.09.442 1.16 1.158 0 0 0 1.378 1.132c.096.467.406.821.879 1.003a1.165 1.162 0 0 0 .415.08c.09 0 .179-.012.266-.034.086.22.282.493.722.668a1.233 1.23 0 0 0 .457.094c.122 0 .241-.022.355-.063a1.373 1.37 0 0 0 1.269.841c.37.002.726-.147.985-.41.221.121.688.341 1.163.341.06 0 .118-.002.175-.01.47-.059.689-.24.789-.382a.571.57 0 0 0 .048-.078c.11.032.234.058.373.058.255 0 .501-.086.75-.265.244-.174.418-.424.444-.637v-.01c.083.017.167.026.251.026.265 0 .527-.082.773-.242.48-.31.562-.715.554-.98a1.28 1.279 0 0 0 .978-.194 1.04 1.04 0 0 0 .502-.808 1.088 1.085 0 0 0-.16-.653c.804-.342 2.636-1.003 4.795-1.483a4.734 4.721 0 0 0-.067-.492 27.742 27.667 0 0 0-5.049 1.62zm5.123-.763c0 4.027-5.166 7.293-11.537 7.293-6.372 0-11.538-3.266-11.538-7.293 0-4.028 5.165-7.293 11.539-7.293 6.371 0 11.537 3.265 11.537 7.293zm.46.004c0-4.272-5.374-7.755-12-7.755S.002 7.277.002 11.55L0 12.004c0 4.533 4.695 8.203 11.999 8.203 7.347 0 12-3.67 12-8.204z"/></svg>
+            </span>
+            <span class="payment-name">Mercado Pago</span>
+          </li>
+          <li class="payment-item">
+            <span class="payment-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 30" aria-hidden="true"><circle cx="19.5" cy="15" r="12.5" fill="#eb001b"/><circle cx="28.5" cy="15" r="12.5" fill="#f79e1b" style="mix-blend-mode: multiply"/></svg>
+            </span>
+            <span class="payment-name">Tarjeta de débito Mastercard</span>
+          </li>
+          <li class="payment-item">
+            <span class="payment-logo payment-logo-visa">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1a1f71" d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"/></svg>
+            </span>
+            <span class="payment-name">Tarjeta de débito Visa</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Contacto -->
+      <section class="home-section home-contact" aria-labelledby="home-contact-title">
+        <div class="home-section-head home-section-head-center">
+          <div>
+            <p class="home-section-kicker">Estamos para ayudarte</p>
+            <h2 class="home-section-title" id="home-contact-title">Contacto</h2>
+          </div>
+        </div>
+
+        <div class="contact-grid">
+          <div class="contact-block">
+            <h3 class="contact-block-title">Escribinos</h3>
+            <p class="contact-block-text">Consultas, precios y confirmación de tu pedido, directo por WhatsApp.</p>
+            <a class="contact-whatsapp" id="contacto-whatsapp" href="#" target="_blank" rel="noopener noreferrer">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.557 4.126 1.528 5.855L0 24l6.335-1.511A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.84 0-3.569-.482-5.063-1.326l-.363-.215-3.762.897.946-3.664-.236-.376A9.937 9.937 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              <span class="contact-whatsapp-text">
+                <strong>WhatsApp</strong>
+                <small id="contacto-telefono"></small>
+              </span>
+            </a>
+          </div>
+
+          <div class="contact-block">
+            <h3 class="contact-block-title">Entregas</h3>
+            <ul class="contact-list">
+              <li><span class="contact-item-label">Días</span> Entregas los <strong>sábados</strong>; te enviamos el horario exacto por WhatsApp.</li>
+              <li><span class="contact-item-label">Seña</span> El pedido se confirma con una seña del <strong><span class="pct-sena">10%</span></strong>; el resto al retirar.</li>
+            </ul>
+          </div>
+
+          <div class="contact-block">
+            <h3 class="contact-block-title">Puntos de encuentro</h3>
+            <ul class="contact-puntos" id="contacto-puntos"></ul>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /view-home -->
+
+    <!-- ===================== VISTA: TIENDA ===================== -->
+    <div id="view-catalogo" class="view-catalogo hidden">
+      <!-- Anuncio breve para lectores de pantalla: solo la cantidad de resultados -->
+      <p id="results-status" class="sr-only" role="status" aria-live="polite"></p>
+
+      <!-- Título de la página: ruta + título + contador + descripción -->
+      <div class="title-container">
+        <nav class="breadcrumb" aria-label="Ruta de navegación">
+          <button type="button" class="breadcrumb-home" id="breadcrumb-home">Inicio</button>
+          <span class="breadcrumb-sep" aria-hidden="true">›</span>
+          <span class="breadcrumb-current" id="breadcrumb-current">Todos los productos</span>
+        </nav>
+        <h1 class="catalog-title" id="catalog-title">Todos los productos</h1>
+        <span class="catalog-count" id="catalog-count" aria-live="polite"></span>
+        <p class="catalog-description">Figuras de yeso sin pintar, ideales para pintar, regalar y revender. Seña mínima del <span class="pct-sena">10%</span> para confirmar tu pedido. Entregas los sábados.</p>
+      </div>
+
+      <div class="catalog-layout">
+
+        <!-- ======================================================
+             FILTROS LATERALES (estilo The Ancient Home)
+             Precio (slider) + Categorías (checkboxes) + Disponibilidad
+        ====================================================== -->
+        <aside class="catalog-sidebar" id="catalog-sidebar" aria-label="Filtros del catálogo">
+          <div class="sidebar-head">
+            <h2 class="sidebar-title">Filtros</h2>
+            <div class="sidebar-head-actions">
+              <button type="button" id="btn-limpiar-filtros" class="sidebar-clear">Limpiar todo</button>
+              <button type="button" id="btn-cerrar-filtros" class="btn-cerrar sidebar-close" aria-label="Cerrar filtros">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="sidebar-body">
+
+            <!-- Grupo: Precio (rango ajustable) -->
+            <div class="filter-group">
+              <h3 class="filter-group-title">Precio</h3>
+              <div class="price-filter">
+                <div class="price-inputs">
+                  <label class="sr-only" for="filtro-precio-min">Precio mínimo</label>
+                  <input
+                    type="number"
+                    id="filtro-precio-min"
+                    class="price-input"
+                    min="0"
+                    step="100"
+                    inputmode="numeric"
+                    aria-label="Precio mínimo"
+                  />
+                  <span class="price-sep" aria-hidden="true">–</span>
+                  <label class="sr-only" for="filtro-precio-max">Precio máximo</label>
+                  <input
+                    type="number"
+                    id="filtro-precio-max"
+                    class="price-input"
+                    min="0"
+                    step="100"
+                    inputmode="numeric"
+                    aria-label="Precio máximo"
+                  />
+                </div>
+                <div class="price-range" id="price-range">
+                  <input
+                    type="range"
+                    id="filtro-precio-min-range"
+                    class="price-range-input price-range-min"
+                    min="0" max="100" step="100" value="0"
+                    aria-label="Límite inferior del precio"
+                  />
+                  <input
+                    type="range"
+                    id="filtro-precio-max-range"
+                    class="price-range-input price-range-max"
+                    min="0" max="100" step="100" value="100"
+                    aria-label="Límite superior del precio"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Grupo: Categorías (checkboxes) -->
+            <div class="filter-group">
+              <h3 class="filter-group-title">Categoría</h3>
+              <div class="filter-checks" id="filtro-categorias">
+                <!-- Checkboxes generados por script.js -->
+              </div>
+            </div>
+
+            <!-- Grupo: Disponibilidad -->
+            <div class="filter-group">
+              <h3 class="filter-group-title">Disponibilidad</h3>
+              <div class="filter-checks">
+                <label class="checkbox-row">
+                  <input type="checkbox" id="filtro-disponibles" />
+                  <span>Solo con stock</span>
+                </label>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="filtro-destacados" />
+                  <span>Solo destacados</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- ===================== COLUMNA PRINCIPAL ===================== -->
+        <div class="catalog-main">
+
+          <!-- Barra de herramientas: filtrar (móvil) + orden + vista -->
+          <div class="catalog-toolbar">
+            <div class="toolbar-left">
+              <button type="button" id="btn-filtros-movil" class="btn-filtros-movil" aria-expanded="false" aria-controls="catalog-sidebar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+                Filtros
+                <span id="filtros-contador" class="filtros-contador hidden" aria-hidden="true">0</span>
+              </button>
+            </div>
+            <div class="toolbar-right">
+              <div class="sort-wrapper">
+                <label for="campo-orden" class="sr-only">Ordenar productos</label>
+                <select id="campo-orden" class="sort-select">
+                  <option value="destacados">Destacados primero</option>
+                  <option value="precio-asc">Precio: menor a mayor</option>
+                  <option value="precio-desc">Precio: mayor a menor</option>
+                  <option value="nombre">Nombre: A - Z</option>
+                </select>
+                <svg class="sort-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+
+              <!-- Cambiar vista del catálogo: grande / compacta / lista -->
+              <div class="vista-toggler" role="group" aria-label="Cambiar la vista del catálogo">
+                <button
+                  type="button"
+                  class="vista-btn active"
+                  data-vista="large"
+                  aria-label="Vista grande"
+                  title="Vista grande"
+                  aria-pressed="true"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.2"/><rect x="13" y="3" width="8" height="8" rx="1.2"/><rect x="3" y="13" width="8" height="8" rx="1.2"/><rect x="13" y="13" width="8" height="8" rx="1.2"/></svg>
+                </button>
+                <button
+                  type="button"
+                  class="vista-btn"
+                  data-vista="small"
+                  aria-label="Vista compacta"
+                  title="Vista compacta"
+                  aria-pressed="false"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><rect x="16" y="16" width="5" height="5" rx="1"/></svg>
+                </button>
+                <button
+                  type="button"
+                  class="vista-btn"
+                  data-vista="list"
+                  aria-label="Vista lista"
+                  title="Vista lista"
+                  aria-pressed="false"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="0.9" fill="currentColor"/><circle cx="4" cy="12" r="0.9" fill="currentColor"/><circle cx="4" cy="18" r="0.9" fill="currentColor"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pills de filtros activos -->
+          <div id="active-filters" class="active-filters hidden" aria-live="polite"></div>
+
+          <!-- Esqueleto mientras se descarga la planilla -->
+          <div id="catalog-loading" class="product-grid catalog-loading hidden" aria-hidden="true">
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+          </div>
+
+          <!-- Solo se ve si la planilla no cargó y no había copia guardada -->
+          <div id="catalog-error" class="catalog-error hidden" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <p class="catalog-error-title">No pudimos cargar el catálogo</p>
+            <span class="catalog-error-sub" id="catalog-error-sub">Revisá tu conexión a internet e intentá de nuevo.</span>
+            <button type="button" id="btn-reintentar" class="btn-reintentar">Reintentar</button>
+          </div>
+
+          <!-- Se muestra cuando la planilla no se pudo leer y se muestra una copia guardada -->
+          <div id="catalog-offline" class="catalog-offline hidden" role="status" aria-live="polite">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <div class="catalog-offline-text">
+              <strong>Catálogo en modo respaldo</strong>
+              <span id="offline-detalle"></span>
+            </div>
+            <button type="button" id="btn-reintentar-offline" class="btn-reintentar">Reintentar</button>
+          </div>
+
+          <div class="product-grid" id="product-grid" aria-label="Catálogo de productos">
+            <!-- Cards generadas dinámicamente por script.js -->
+          </div>
+          <p id="no-results" class="no-results hidden" role="status">
+            No se encontraron productos. Probá con otra búsqueda.
+          </p>
+
+          <!-- Paginación (como la lista de la referencia, p. ej. "1 2 Siguiente") -->
+          <nav id="catalog-pagination" class="catalog-pagination hidden" aria-label="Paginación del catálogo"></nav>
+        </div><!-- /catalog-main -->
+      </div><!-- /catalog-layout -->
+    </div><!-- /view-catalogo -->
+
+  </main>
+
+  <!-- ============================================================
+       BARRA STICKY INFERIOR
+       Siempre visible: muestra el total y botón para abrir el carrito
+  ============================================================ -->
+  <div id="sticky-bar" class="sticky-bar" role="complementary" aria-label="Resumen del carrito">
+    <div class="sticky-info">
+      <span class="sticky-label">Total del carrito</span>
+      <span id="sticky-total" class="sticky-total">$0</span>
+    </div>
+    <button id="btn-ver-carrito" class="btn-ver-carrito" aria-haspopup="dialog" aria-expanded="false">
+      <span id="cart-badge" class="cart-badge hidden" aria-label="Cantidad de items en el carrito">0</span>
+      Ver Carrito
+    </button>
+  </div>
+
+  <!-- ============================================================
+       OVERLAY (fondo oscuro detrás del panel del carrito)
+  ============================================================ -->
+  <div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       OVERLAY del panel de filtros (solo se usa en pantallas chicas)
+  ============================================================ -->
+  <div id="filtros-overlay" class="filtros-overlay" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       PANEL DEL CARRITO (se desliza desde abajo)
+  ============================================================ -->
+  <div id="cart-panel" class="cart-panel" role="dialog" aria-modal="true" aria-label="Panel del carrito de compras">
+
+    <!-- Indicador visual de arrastre (handle) -->
+    <div class="cart-handle" aria-hidden="true"></div>
+
+    <!-- Encabezado del panel -->
+    <div class="cart-panel-header">
+      <h2 class="cart-panel-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Tu Carrito
+      </h2>
+      <button id="btn-cerrar-carrito" class="btn-cerrar" aria-label="Cerrar carrito">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Cuerpo scrolleable del panel -->
+    <div class="cart-panel-body">
+
+      <!-- Lista de items del carrito (generada por JS) -->
+      <div id="cart-items-container" class="cart-items-container"></div>
+
+      <!-- Resumen de totales y seña -->
+      <div id="cart-summary" class="cart-summary hidden" aria-live="polite">
+        <div class="summary-row summary-total-row">
+          <span>Total del pedido</span>
+          <strong id="summary-total">$0</strong>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row summary-sena-row">
+          <div>
+            <span class="summary-label-main">Seña mínima para confirmar</span>
+            <span class="summary-label-sub"><span class="pct-sena">10%</span> del total</span>
+          </div>
+          <strong id="summary-sena" class="sena-amount">$0</strong>
+        </div>
+        <div class="summary-row summary-resto-row">
+          <span>Resto a abonar al retirar</span>
+          <strong id="summary-resto">$0</strong>
+        </div>
+      </div>
+
+      <!-- =============================================
+           FORMULARIO DE CHECKOUT
+      ============================================= -->
+      <div id="checkout-form-wrapper" class="checkout-form-wrapper hidden">
+        <h3 class="checkout-title">Datos del pedido</h3>
+
+        <!-- Campo: Nombre y Apellido -->
+        <div class="form-group">
+          <label for="campo-nombre">Nombre y Apellido <span class="required-mark" aria-hidden="true">*</span></label>
+          <input
+            type="text"
+            id="campo-nombre"
+            class="form-input"
+            placeholder="Ej: Ana García"
+            autocomplete="name"
+            autocapitalize="words"
+            enterkeyhint="next"
+            aria-required="true"
+            aria-describedby="error-nombre"
+          />
+          <span class="field-error hidden" id="error-nombre" role="alert">Por favor ingresá tu nombre completo.</span>
+        </div>
+
+        <!-- Campo: Teléfono -->
+        <div class="form-group">
+          <label for="campo-telefono">Tu WhatsApp <span class="required-mark" aria-hidden="true">*</span></label>
+          <input
+            type="tel"
+            id="campo-telefono"
+            class="form-input"
+            placeholder="Ej: 1134501054"
+            autocomplete="tel"
+            inputmode="tel"
+            enterkeyhint="next"
+            aria-required="true"
+            aria-describedby="error-telefono"
+          />
+          <span class="field-error hidden" id="error-telefono" role="alert">Por favor ingresá tu teléfono.</span>
+        </div>
+
+        <!-- Campo: Punto de Encuentro -->
+        <div class="form-group">
+          <label for="campo-punto">Punto de encuentro <span class="required-mark" aria-hidden="true">*</span></label>
+          <div class="select-wrapper">
+            <select
+              id="campo-punto"
+              class="form-input form-select"
+              aria-required="true"
+              aria-describedby="error-punto"
+            >
+              <!-- Opciones generadas por script.js desde PUNTOS_ENTREGA -->
+              <option value="">— Seleccioná tu punto —</option>
+            </select>
+            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          <span class="field-error hidden" id="error-punto" role="alert">Por favor seleccioná un punto de encuentro.</span>
+        </div>
+
+        <!-- Tienda en pausa -->
+        <div id="pausa-warning" class="merlo-warning hidden" role="alert">
+          <span id="pausa-texto"></span>
+        </div>
+
+        <!-- MÍNIMO DEL PUNTO DE ENCUENTRO: alerta condicional (lógica en script.js) -->
+        <div id="merlo-warning" class="merlo-warning hidden" role="alert" aria-live="polite">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <span id="merlo-texto">Para entregas en <strong>Merlo Coppel</strong>, el pedido mínimo es de <strong>$12.000</strong>.</span>
+        </div>
+
+        <!-- Aviso de días de entrega -->
+        <div class="aviso-entrega" role="note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span>Las entregas se realizan los <strong>días sábados</strong>. Una vez confirmado tu pedido, te enviaremos el horario exacto por WhatsApp.</span>
+        </div>
+
+        <!-- Envío a WhatsApp: queda fijo abajo del panel para no perderlo al scrollear -->
+        <p id="checkout-cuenta" class="checkout-cuenta hidden"></p>
+
+        <div class="checkout-send">
+        <p class="envio-ayuda">Se abre WhatsApp con tu pedido ya escrito: solo tocá <strong>Enviar</strong>. Te respondemos con los datos para pagar la seña.</p>
+        <button
+          id="btn-enviar-pedido"
+          class="btn-enviar-pedido"
+          type="button"
+          aria-disabled="true"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.557 4.126 1.528 5.855L0 24l6.335-1.511A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.84 0-3.569-.482-5.063-1.326l-.363-.215-3.762.897.946-3.664-.236-.376A9.937 9.937 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+          <span id="btn-enviar-texto">Enviar pedido por WhatsApp</span>
+        </button>
+        </div>
+      </div>
+
+      <!-- Al volver de WhatsApp: confirmar si el pedido salió -->
+      <div id="cart-sent" class="cart-sent hidden" role="status" aria-live="polite">
+        <p class="cart-sent-title">¿Pudiste enviar el pedido?</p>
+        <p class="cart-sent-sub">Si WhatsApp no se abrió o no llegaste a tocar Enviar, probá de nuevo.</p>
+        <p class="cart-sent-numero hidden" id="cart-sent-numero"></p>
+        <div class="cart-sent-actions">
+          <button type="button" id="btn-pedido-ok" class="btn-agregar">Sí, vaciar carrito</button>
+          <button type="button" id="btn-pedido-reintentar" class="hero-btn hero-btn-outline">Intentar de nuevo</button>
+        </div>
+      </div>
+
+      <!-- Estado vacío del carrito -->
+      <div id="cart-empty" class="cart-empty" aria-live="polite">
+        <div class="cart-empty-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <p class="cart-empty-title">Tu carrito está vacío</p>
+        <span class="cart-empty-sub">¡Explorá nuestros productos y agregá tus favoritos!</span>
+      </div>
+
+    </div><!-- /cart-panel-body -->
+  </div><!-- /cart-panel -->
+
+  <!-- ============================================================
+       MI CUENTA (panel que sube desde abajo, igual que el carrito)
+  ============================================================ -->
+  <div id="cuenta-panel" class="cart-panel cuenta-panel" role="dialog" aria-modal="true" aria-labelledby="cuenta-titulo">
+    <div class="cart-handle" aria-hidden="true"></div>
+    <div class="cart-panel-header">
+      <h2 class="cart-panel-title" id="cuenta-titulo">Mi cuenta</h2>
+      <button id="btn-cerrar-cuenta" class="btn-cerrar" aria-label="Cerrar mi cuenta">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="cart-panel-body" id="cuenta-body"></div>
+  </div>
+
+  <!-- ============================================================
+       VISTA DE PRODUCTO (detalle) — estilo tienda de referencia
+       Se abre al tocar una tarjeta del catálogo o un relacionado.
+  ============================================================ -->
+  <div id="product-detail" class="product-detail" role="dialog" aria-modal="true" aria-label="Detalle del producto">
+    <div class="detail-topbar">
+      <button type="button" id="btn-volver-catalogo" class="detail-volver">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver al catálogo
+      </button>
+      <!-- Acceso al carrito desde la ficha (la ficha tapa la barra inferior) -->
+      <button type="button" id="btn-detalle-carrito" class="detail-cart" aria-label="Ver carrito">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span>Mi pedido</span>
+        <strong id="detail-cart-count" class="detail-cart-count hidden">0</strong>
+      </button>
+      <button type="button" id="btn-cerrar-detalle" class="btn-cerrar detail-close" aria-label="Cerrar detalle del producto">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-scroll" id="detail-scroll">
+      <div id="detail-content" class="detail-content"></div>
+    </div>
+  </div>
+
+  <script src="script.js" charset="UTF-8"></script>
+</body>
+</html>

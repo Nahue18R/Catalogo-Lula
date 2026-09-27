@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="theme-color" content="#556b2f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #ffffff; --text: #36454f; --muted: #5e6b6f; --border: #dedbd4;
+    --primary: #556b2f; --primary-dark: #3f4d1f; --beige: #8a6639; --beige-soft: #f3ece2;
+    --danger: #b3261e; --ok: #2e7d32; --r: 12px;
+    --font: 'Montserrat', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 var(--font);
+         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  input, select, textarea { font-size: 16px; }
+  button { touch-action: manipulation; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .hidden { display: none !important; }
+
+  /* ---------- Encabezado ---------- */
+  header { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--border);
+           padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; display: flex; align-items: center; gap: 12px; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 700; flex: 1; }
+  header small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+
+  main { padding: 16px; max-width: 760px; margin: 0 auto; }
+
+  /* ---------- Barra inferior ---------- */
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; background: var(--card);
+             border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  nav.tabs button { flex: 1; border: 0; background: none; padding: 10px 4px 12px; display: flex; flex-direction: column;
+                    align-items: center; gap: 3px; font-size: 11.5px; font-weight: 600; color: var(--muted); min-height: 60px; }
+  nav.tabs button svg { width: 22px; height: 22px; }
+  nav.tabs button[aria-selected="true"] { color: var(--primary); }
+  .badge { background: var(--danger); color: #fff; border-radius: 10px; font-size: 10.5px; padding: 1px 6px; margin-left: 2px; }
+
+  /* ---------- Controles ---------- */
+  .search { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--card); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; scrollbar-width: none; }
+  .chips button { flex-shrink: 0; border: 1px solid var(--border); background: var(--card); border-radius: 999px;
+                  padding: 8px 14px; font-size: 13px; font-weight: 600; min-height: 40px; }
+  .chips button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .btn { border: 0; border-radius: var(--r); padding: 13px 18px; font-weight: 700; min-height: 48px; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-ghost { background: none; border: 1px solid var(--border); }
+  .btn-danger { background: none; color: var(--danger); border: 1px solid #e8c4c1; }
+  .btn:disabled { opacity: .55; }
+
+  .fab { position: fixed; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); z-index: 25;
+         border: 0; border-radius: 999px; background: var(--primary); color: #fff; font-weight: 700;
+         padding: 14px 20px; box-shadow: 0 6px 18px rgba(63, 77, 31, .35); display: flex; gap: 8px; align-items: center; }
+
+  /* ---------- Lista de productos ---------- */
+  .lista { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .item { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 10px;
+          display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; }
+  .item.pausado { opacity: .62; }
+  .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; background: var(--beige-soft); }
+  .item-abrir { all: unset; cursor: pointer; display: block; min-width: 0; }
+  .item-nombre { font-weight: 700; font-size: 14px; line-height: 1.3; }
+  .item-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .item-switches { grid-column: 1 / -1; display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+
+  .switch { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; min-height: 44px;
+            background: none; font-size: 13px; font-weight: 600; }
+  .switch .pista { width: 40px; height: 24px; border-radius: 12px; background: #cfcac0; position: relative; transition: background .15s ease-out; flex-shrink: 0; }
+  .switch .pista::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+                          background: #fff; transition: transform .15s ease-out; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .switch[aria-checked="true"] .pista { background: var(--primary); }
+  .switch[aria-checked="true"] .pista::after { transform: translateX(16px); }
+
+  /* ---------- Editor (hoja a pantalla completa) ---------- */
+  .hoja { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; flex-direction: column; }
+  .hoja-head { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+               background: var(--card); border-bottom: 1px solid var(--border); }
+  .hoja-head h2 { margin: 0; font-size: 16px; flex: 1; }
+  .icono { border: 0; background: none; width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+  .hoja-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px; max-width: 760px; width: 100%; margin: 0 auto; }
+  .hoja-foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+               background: var(--card); border-top: 1px solid var(--border); }
+  .hoja-foot .btn-primary { flex: 1; }
+
+  .campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .campo label { font-size: 13px; font-weight: 700; }
+  .campo small { font-size: 12px; color: var(--muted); }
+  .campo input, .campo textarea, .campo select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+  .campo textarea { min-height: 96px; resize: vertical; }
+  .fila3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .fila3 .campo { margin-bottom: 0; }
+  .fila3 input { padding: 12px 8px; }
+
+  .fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+  .foto { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid transparent; background: var(--beige-soft); }
+  .foto.principal { border-color: var(--primary); }
+  .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto .quitar { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; border-radius: 50%; border: 0;
+                  background: rgba(0,0,0,.6); color: #fff; font-size: 16px; line-height: 1; }
+  .foto .etiqueta { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(63,77,31,.85); color: #fff;
+                    font-size: 10.5px; font-weight: 700; text-align: center; padding: 3px; }
+  .foto-agregar { aspect-ratio: 1; border: 2px dashed var(--border); border-radius: 10px; background: var(--card);
+                  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+                  font-size: 12px; font-weight: 600; color: var(--primary); }
+  .subiendo { position: absolute; inset: 0; background: rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+
+  /* ---------- Pedidos ---------- */
+  .pedido { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+  .pedido-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .pedido-num { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pedido-fecha { font-size: 12px; color: var(--muted); }
+  .pedido-cliente { margin: 8px 0 2px; font-weight: 600; }
+  .pedido-detalle { white-space: pre-line; font-size: 13.5px; background: var(--bg); border-radius: 8px; padding: 10px; margin: 10px 0; }
+  .pedido-totales { display: flex; justify-content: space-between; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .pedido-acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .pedido-acciones select { flex: 1; min-width: 170px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; background: var(--card); }
+  .wa { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; min-height: 48px; border-radius: 10px;
+        background: #25d366; color: #fff; font-weight: 700; text-decoration: none; }
+  .estado-Nuevo { border-left-color: var(--danger); }
+  .aviso-nota { color: var(--danger); font-size: 12.5px; margin-top: 6px; }
+
+  /* ---------- Ajustes ---------- */
+  section.bloque { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
+  section.bloque h2 { margin: 0 0 4px; font-size: 16px; }
+  section.bloque > p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .punto { display: grid; grid-template-columns: 1fr 100px; gap: 8px; padding: 12px 0; border-top: 1px solid var(--border); }
+  .punto input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; width: 100%; }
+  .punto .ancho { grid-column: 1 / -1; }
+  .punto-acciones { grid-column: 1 / -1; display: flex; gap: 8px; }
+  .clienta { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+  .clienta small { color: var(--muted); display: block; }
+
+  .vacio { text-align: center; color: var(--muted); padding: 40px 16px; }
+  .cargando { text-align: center; color: var(--muted); padding: 40px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 12px);
+           background: var(--text); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 600;
+           opacity: 0; pointer-events: none; transition: opacity .2s ease-out, transform .2s ease-out; z-index: 80; max-width: 90vw; text-align: center; }
+  .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+  .toast.error { background: var(--danger); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mi catálogo <small id="usuario"></small></h1>
+</header>
+
+<main>
+  <!-- ===================== PRODUCTOS ===================== -->
+  <div id="vista-productos">
+    <input type="search" class="search" id="buscar" placeholder="Buscar producto…" enterkeyhint="search" autocomplete="off">
+    <div class="chips" id="filtros-prod" role="group" aria-label="Filtrar productos">
+      <button data-f="todos" aria-pressed="true">Todos</button>
+      <button data-f="activos" aria-pressed="false">A la venta</button>
+      <button data-f="pausados" aria-pressed="false">Pausados</button>
+      <button data-f="sinfoto" aria-pressed="false">Sin foto</button>
+      <button data-f="destacados" aria-pressed="false">Destacados</button>
+    </div>
+    <div class="lista" id="lista-productos"><div class="cargando">Cargando tu catálogo…</div></div>
+    <button class="fab" id="btn-nuevo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo producto
+    </button>
+  </div>
+
+  <!-- ===================== PEDIDOS ===================== -->
+  <div id="vista-pedidos" class="hidden">
+    <div class="chips" id="filtros-ped" role="group" aria-label="Filtrar pedidos"></div>
+    <div class="lista" id="lista-pedidos"></div>
+  </div>
+
+  <!-- ===================== AJUSTES ===================== -->
+  <div id="vista-ajustes" class="hidden">
+    <section class="bloque">
+      <h2>Tienda</h2>
+      <p>Estos cambios se ven en el catálogo en unos minutos.</p>
+      <div class="campo">
+        <button type="button" class="switch" id="cfg-abierta" role="switch" aria-checked="true">
+          <span>Tomando pedidos</span><span class="pista" aria-hidden="true"></span>
+        </button>
+        <small>Apagalo para vacaciones: las clientas pueden mirar pero no enviar pedidos.</small>
+      </div>
+      <div class="campo"><label for="cfg-pausa">Mensaje cuando está en pausa</label><input id="cfg-pausa"></div>
+      <div class="campo"><label for="cfg-aviso">Franja de avisos (arriba de todo)</label><input id="cfg-aviso"></div>
+      <div class="campo"><label for="cfg-wa">WhatsApp que recibe los pedidos</label><input id="cfg-wa" inputmode="tel"><small>Con 549 adelante, sin + ni espacios. Ej: 5491134501054</small></div>
+      <div class="campo"><label for="cfg-sena">Seña (%)</label><input id="cfg-sena" type="number" inputmode="numeric" min="0" max="100"></div>
+      <div class="campo">
+        <button type="button" class="switch" id="cfg-cuentas" role="switch" aria-checked="true">
+          <span>Clientas pueden crear cuenta</span><span class="pista" aria-hidden="true"></span>
+        </button>
+      </div>
+      <button class="btn btn-primary" id="guardar-config" style="width:100%">Guardar ajustes</button>
+    </section>
+
+    <section class="bloque">
+      <h2>Puntos de encuentro</h2>
+      <p>Mínimo en $ (0 = sin mínimo). Apagá un punto para que no aparezca.</p>
+      <div id="lista-puntos"></div>
+      <div style="display:flex; gap:10px; margin-top:12px">
+        <button class="btn btn-ghost" id="agregar-punto" style="flex:1">+ Agregar punto</button>
+        <button class="btn btn-primary" id="guardar-puntos" style="flex:1">Guardar puntos</button>
+      </div>
+    </section>
+
+    <section class="bloque">
+      <h2>Clientas con cuenta</h2>
+      <p>Si una clienta se olvidó el PIN, reinicialo: podrá crear uno nuevo con su mismo WhatsApp.</p>
+      <div id="lista-clientas"><div class="cargando">Cargando…</div></div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================== EDITOR DE PRODUCTO ===================== -->
+<div class="hoja hidden" id="editor" role="dialog" aria-modal="true" aria-labelledby="editor-titulo">
+  <div class="hoja-head">
+    <button class="icono" id="editor-cerrar" aria-label="Cerrar sin guardar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 id="editor-titulo">Nuevo producto</h2>
+  </div>
+  <div class="hoja-body">
+    <div class="campo">
+      <label>Fotos</label>
+      <div class="fotos" id="editor-fotos"></div>
+      <small>La primera es la principal. Tocá una foto para hacerla principal.</small>
+      <input type="file" id="input-foto" accept="image/*" multiple class="hidden">
+    </div>
+    <div class="campo"><label for="e-nombre">Nombre *</label><input id="e-nombre" autocapitalize="sentences" enterkeyhint="next"></div>
+    <div class="campo"><label for="e-categoria">Categoría</label><input id="e-categoria" list="lista-categorias" enterkeyhint="next"><datalist id="lista-categorias"></datalist></div>
+    <div class="campo"><label for="e-descripcion">Descripción</label><textarea id="e-descripcion"></textarea><small>Recordá: las figuras van sin pintar.</small></div>
+    <div class="campo"><label for="e-medidas">Medidas</label><input id="e-medidas" placeholder="Ej: 20 cm"></div>
+    <div class="campo">
+      <label>Precios</label>
+      <div class="fila3">
+        <div class="campo"><small>Unidad *</small><input id="e-p1" type="number" inputmode="numeric" min="0"></div>
+        <div class="campo"><small>Pack ×10</small><input id="e-p10" type="number" inputmode="numeric" min="0"></div>
+        <div class="campo"><small>Pack ×20</small><input id="e-p20" type="number" inputmode="numeric" min="0"></div>
+      </div>
+      <small id="e-ahorro"></small>
+    </div>
+    <div class="campo" style="display:flex; flex-direction:row; gap:8px">
+      <button type="button" class="switch" id="e-activo" role="switch" aria-checked="true"><span>A la venta</span><span class="pista" aria-hidden="true"></span></button>
+      <button type="button" class="switch" id="e-destacado" role="switch" aria-checked="false"><span>Destacado</span><span class="pista" aria-hidden="true"></span></button>
+    </div>
+    <button class="btn btn-danger hidden" id="editor-borrar" style="width:100%">Borrar este producto</button>
+  </div>
+  <div class="hoja-foot">
+    <button class="btn btn-primary" id="editor-guardar">Guardar</button>
+  </div>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-vista="productos" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Productos
+  </button>
+  <button role="tab" data-vista="pedidos" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+    <span>Pedidos <span class="badge hidden" id="badge-nuevos">0</span></span>
+  </button>
+  <button role="tab" data-vista="ajustes" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+    Ajustes
+  </button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const S = { productos: [], config: {}, puntos: [], estados: [], filtroProd: 'todos', filtroPed: 'Pendientes', editando: null, fotos: [], subiendo: 0 };
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const plata = (n) => '$ ' + Math.round(Number(n) || 0).toLocaleString('es-AR');
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+/** Llama a una función del servidor como promesa. */
+const srv = (fn, ...args) => new Promise((ok, mal) =>
+  google.script.run.withSuccessHandler(ok).withFailureHandler(e => mal(e && e.message ? e.message : String(e)))[fn](...args));
+
+let toastT;
+const toast = (msg, error = false) => {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.toggle('error', error); t.classList.add('visible');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('visible'), error ? 4200 : 2400);
+};
+
+/** Miniatura de Drive a partir de un link o ID. */
+const miniatura = (url, ancho = 200) => {
+  const m = String(url).match(/\/d\/([\w-]+)/) || String(url).match(/[?&]id=([\w-]+)/) || String(url).match(/^([\w-]{28,44})$/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${ancho}`;
+  return /^https?:/.test(url) ? url : '';
+};
+
+/* ---------------- Navegación ---------------- */
+const irA = (vista) => {
+  ['productos', 'pedidos', 'ajustes'].forEach(v => $('#vista-' + v).classList.toggle('hidden', v !== vista));
+  $$('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.vista === vista)));
+  window.scrollTo(0, 0);
+  if (vista === 'pedidos') cargarPedidos();
+  if (vista === 'ajustes') { pintarAjustes(); cargarClientas(); }
+};
+$$('nav.tabs button').forEach(b => b.addEventListener('click', () => irA(b.dataset.vista)));
+
+/* ---------------- Productos ---------------- */
+const pintarProductos = () => {
+  const q = norm($('#buscar').value);
+  const f = S.filtroProd;
+  const lista = S.productos.filter(p => {
+    if (q && !norm(p.nombre + ' ' + p.categoria).includes(q)) return false;
+    if (f === 'activos') return p.activo;
+    if (f === 'pausados') return !p.activo;
+    if (f === 'sinfoto') return !p.imagenes.length;
+    if (f === 'destacados') return p.destacado;
+    return true;
+  });
+  const cont = $('#lista-productos');
+  if (!lista.length) { cont.innerHTML = '<div class="vacio">No hay productos con ese filtro.</div>'; return; }
+  cont.innerHTML = lista.map(p => `
+    <article class="item ${p.activo ? '' : 'pausado'}">
+      ${p.imagenes.length ? `<img class="thumb" src="${esc(miniatura(p.imagenes[0]))}" alt="" loading="lazy">` : '<div class="thumb"></div>'}
+      <button class="item-abrir" data-fila="${p.fila}">
+        <div class="item-nombre">${esc(p.nombre)}</div>
+        <div class="item-sub">${esc(p.categoria)} · ${plata(p.precio_unitario)}${p.imagenes.length ? '' : ' · sin foto'}</div>
+      </button>
+      <div class="item-switches">
+        <button class="switch" role="switch" aria-checked="${p.activo}" data-fila="${p.fila}" data-campo="activo"><span>A la venta</span><span class="pista" aria-hidden="true"></span></button>
+        <button class="switch" role="switch" aria-checked="${p.destacado}" data-fila="${p.fila}" data-campo="destacado"><span>Destacado</span><span class="pista" aria-hidden="true"></span></button>
+      </div>
+    </article>`).join('');
+};
+
+$('#lista-productos').addEventListener('click', async (e) => {
+  const abrir = e.target.closest('.item-abrir');
+  if (abrir) return abrirEditor(S.productos.find(p => p.fila === Number(abrir.dataset.fila)));
+
+  const sw = e.target.closest('.switch');
+  if (!sw) return;
+  const p = S.productos.find(x => x.fila === Number(sw.dataset.fila));
+  const campo = sw.dataset.campo;
+  const nuevo = !p[campo];
+  // Optimista: cambia ya y se revierte si falla
+  p[campo] = nuevo; pintarProductos();
+  try {
+    await srv('cambiarInterruptor', p.id, p.fila, campo, nuevo);
+    toast(campo === 'activo' ? (nuevo ? 'A la venta' : 'Pausado: se ve como sin stock') : (nuevo ? 'Destacado' : 'Ya no está destacado'));
+  } catch (err) {
+    p[campo] = !nuevo; pintarProductos(); toast(err, true);
+  }
+});
+
+$('#buscar').addEventListener('input', pintarProductos);
+$('#filtros-prod').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.filtroProd = b.dataset.f;
+  $$('#filtros-prod button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  pintarProductos();
+});
+
+/* ---------------- Editor ---------------- */
+const setSwitch = (el, v) => el.setAttribute('aria-checked', String(!!v));
+const getSwitch = (el) => el.getAttribute('aria-checked') === 'true';
+$$('#e-activo, #e-destacado, #cfg-abierta, #cfg-cuentas').forEach(el => el.addEventListener('click', () => setSwitch(el, !getSwitch(el))));
+
+const abrirEditor = (p) => {
+  S.editando = p || null;
+  $('#editor-titulo').textContent = p ? 'Editar producto' : 'Nuevo producto';
+  $('#e-nombre').value = p ? p.nombre : '';
+  $('#e-categoria').value = p ? p.categoria : '';
+  $('#e-descripcion').value = p ? p.descripcion : '';
+  $('#e-medidas').value = p ? p.medidas : '';
+  $('#e-p1').value = p ? p.precio_unitario || '' : '';
+  $('#e-p10').value = p ? p.precio_pack_10 || '' : '';
+  $('#e-p20').value = p ? p.precio_pack_20 || '' : '';
+  setSwitch($('#e-activo'), p ? p.activo : true);
+  setSwitch($('#e-destacado'), p ? p.destacado : false);
+  $('#editor-borrar').classList.toggle('hidden', !p);
+  S.fotos = p ? [...p.imagenes] : [];
+  pintarFotos(); calcularAhorro();
+  $('#lista-categorias').innerHTML = [...new Set(S.productos.map(x => x.categoria).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join('');
+  $('#editor').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ editor: 1 }, '');
+};
+
+const cerrarEditor = (desdeHistorial) => {
+  $('#editor').classList.add('hidden');
+  document.body.style.overflow = '';
+  if (!desdeHistorial && history.state && history.state.editor) history.back();
+};
+$('#editor-cerrar').addEventListener('click', () => cerrarEditor(false));
+window.addEventListener('popstate', () => { if (!$('#editor').classList.contains('hidden')) cerrarEditor(true); });
+$('#btn-nuevo').addEventListener('click', () => abrirEditor(null));
+
+const calcularAhorro = () => {
+  const u = Number($('#e-p1').value) || 0;
+  const partes = [[10, Number($('#e-p10').value) || 0], [20, Number($('#e-p20').value) || 0]]
+    .filter(([n, p]) => u && p)
+    .map(([n, p]) => `Pack ×${n}: ${plata(p / n)} c/u (${Math.round((1 - p / (u * n)) * 100)}% de descuento)`);
+  $('#e-ahorro').textContent = partes.join(' · ') || 'Si dejás un pack vacío, se cobra el precio por unidad × cantidad.';
+};
+['#e-p1', '#e-p10', '#e-p20'].forEach(s => $(s).addEventListener('input', calcularAhorro));
+
+const pintarFotos = () => {
+  $('#editor-fotos').innerHTML = S.fotos.map((f, i) => `
+    <div class="foto ${i === 0 ? 'principal' : ''}" data-i="${i}">
+      <img src="${esc(miniatura(f, 300))}" alt="Foto ${i + 1}">
+      <button class="quitar" data-quitar="${i}" aria-label="Quitar foto ${i + 1}">×</button>
+      ${i === 0 ? '<span class="etiqueta">Principal</span>' : ''}
+    </div>`).join('') +
+    (S.subiendo ? `<div class="foto"><div class="subiendo">Subiendo ${S.subiendo}…</div></div>` : '') +
+    `<button class="foto-agregar" id="agregar-foto" type="button">
+       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+       Agregar foto
+     </button>`;
+};
+
+$('#editor-fotos').addEventListener('click', (e) => {
+  if (e.target.closest('#agregar-foto')) return $('#input-foto').click();
+  const q = e.target.closest('[data-quitar]');
+  if (q) { S.fotos.splice(Number(q.dataset.quitar), 1); return pintarFotos(); }
+  const f = e.target.closest('.foto[data-i]');
+  if (f && Number(f.dataset.i) > 0) { const [x] = S.fotos.splice(Number(f.dataset.i), 1); S.fotos.unshift(x); pintarFotos(); }
+});
+
+/** Achica la foto en el celular antes de subirla: 4 MB → ~300 KB. */
+const achicar = (archivo, lado = 1600) => new Promise((ok, mal) => {
+  const img = new Image();
+  const url = URL.createObjectURL(archivo);
+  img.onload = () => {
+    const k = Math.min(1, lado / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    ok(c.toDataURL('image/jpeg', 0.82));
+  };
+  img.onerror = () => mal('No pude leer esa foto.');
+  img.src = url;
+});
+
+$('#input-foto').addEventListener('change', async (e) => {
+  const archivos = [...e.target.files];
+  e.target.value = '';
+  for (const a of archivos) {
+    S.subiendo++; pintarFotos();
+    try {
+      const datos = await achicar(a);
+      const url = await srv('subirFoto', datos, $('#e-nombre').value || 'producto');
+      S.fotos.push(url);
+    } catch (err) { toast(err, true); }
+    S.subiendo--; pintarFotos();
+  }
+});
+
+$('#editor-guardar').addEventListener('click', async () => {
+  if (S.subiendo) return toast('Esperá a que terminen de subir las fotos.', true);
+  const p = {
+    fila: S.editando ? S.editando.fila : 0, id: S.editando ? S.editando.id : '',
+    nombre: $('#e-nombre').value, categoria: $('#e-categoria').value, descripcion: $('#e-descripcion').value,
+    medidas: $('#e-medidas').value, precio_unitario: $('#e-p1').value, precio_pack_10: $('#e-p10').value,
+    precio_pack_20: $('#e-p20').value, imagenes: S.fotos, activo: getSwitch($('#e-activo')), destacado: getSwitch($('#e-destacado')),
+  };
+  if (!p.nombre.trim()) return toast('Poné un nombre.', true);
+  if (!(Number(p.precio_unitario) > 0)) return toast('Falta el precio por unidad.', true);
+  const btn = $('#editor-guardar'); btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    S.productos = await srv('guardarProducto', p);
+    cerrarEditor(false); pintarProductos();
+    toast(S.editando ? 'Cambios guardados' : 'Producto agregado al catálogo');
+  } catch (err) { toast(err, true); }
+  btn.disabled = false; btn.textContent = 'Guardar';
+});
+
+$('#editor-borrar').addEventListener('click', async () => {
+  const p = S.editando;
+  if (!p || !confirm(`¿Borrar "${p.nombre}" del catálogo? Si solo se agotó, mejor apagá "A la venta".`)) return;
+  try {
+    S.productos = await srv('borrarProducto', p.id, p.fila);
+    cerrarEditor(false); pintarProductos(); toast('Producto borrado');
+  } catch (err) { toast(err, true); }
+});
+
+/* ---------------- Pedidos ---------------- */
+const pintarFiltrosPedidos = () => {
+  const opciones = ['Pendientes', ...S.estados, 'Todos'];
+  $('#filtros-ped').innerHTML = opciones.map(o => `<button data-e="${esc(o)}" aria-pressed="${o === S.filtroPed}">${esc(o)}</button>`).join('');
+};
+$('#filtros-ped').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.filtroPed = b.dataset.e; pintarFiltrosPedidos(); cargarPedidos();
+});
+
+const cargarPedidos = async () => {
+  if (!S.pedidosConfigurado) { $('#lista-pedidos').innerHTML = '<div class="vacio">Falta configurar la planilla de pedidos (ver guía).</div>'; return; }
+  $('#lista-pedidos').innerHTML = '<div class="cargando">Cargando pedidos…</div>';
+  try {
+    const pedidos = await srv('listarPedidos', S.filtroPed);
+    if (!pedidos.length) { $('#lista-pedidos').innerHTML = '<div class="vacio">No hay pedidos acá.</div>'; return; }
+    $('#lista-pedidos').innerHTML = pedidos.map(p => {
+      const f = p.fecha ? new Date(p.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+      const tel = String(p.telefono).replace(/\D/g, '');
+      const wa = 'https://api.whatsapp.com/send?phone=' + (tel.startsWith('54') ? tel : '549' + tel) +
+        '&text=' + encodeURIComponent(`Hola ${p.nombre}! Te escribo por tu pedido ${p.numero}.`);
+      return `
+      <article class="pedido">
+        <div class="pedido-head"><span class="pedido-num">${esc(p.numero)}</span><span class="pedido-fecha">${f}</span></div>
+        <div class="pedido-cliente">${esc(p.nombre)}${p.cuenta ? ' · con cuenta' : ''}</div>
+        <div class="item-sub">${esc(p.punto)} · ${esc(p.telefono)}</div>
+        <div class="pedido-detalle">${esc(p.detalle)}</div>
+        <div class="pedido-totales"><span>Total <strong>${plata(p.total)}</strong></span><span>Seña ${plata(p.sena)}</span></div>
+        ${p.notas ? `<div class="aviso-nota">${esc(p.notas)}</div>` : ''}
+        <div class="pedido-acciones">
+          <select data-num="${esc(p.numero)}" aria-label="Estado del pedido ${esc(p.numero)}">
+            ${S.estados.map(e => `<option ${e === p.estado ? 'selected' : ''}>${esc(e)}</option>`).join('')}
+          </select>
+          <a class="wa" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+      </article>`;
+    }).join('');
+  } catch (err) { $('#lista-pedidos').innerHTML = `<div class="vacio">${esc(err)}</div>`; }
+};
+
+$('#lista-pedidos').addEventListener('change', async (e) => {
+  const sel = e.target.closest('select[data-num]'); if (!sel) return;
+  sel.disabled = true;
+  try { await srv('cambiarEstadoPedido', sel.dataset.num, sel.value); toast(`Pedido ${sel.dataset.num}: ${sel.value}`); actualizarBadge(); }
+  catch (err) { toast(err, true); }
+  sel.disabled = false;
+});
+
+const actualizarBadge = async () => {
+  if (!S.pedidosConfigurado) return;
+  try {
+    const n = (await srv('listarPedidos', 'Nuevo')).length;
+    $('#badge-nuevos').textContent = n; $('#badge-nuevos').classList.toggle('hidden', !n);
+  } catch (e) {}
+};
+
+/* ---------------- Ajustes ---------------- */
+const esSi = (v, def) => { const s = String(v).trim().toLowerCase(); return s === '' ? def : ['si', 'sí', 'true', 'x', '1'].includes(s); };
+
+const pintarAjustes = () => {
+  const c = S.config;
+  setSwitch($('#cfg-abierta'), esSi(c.tienda_abierta, true));
+  setSwitch($('#cfg-cuentas'), esSi(c.cuentas_clientas, true));
+  $('#cfg-pausa').value = c.mensaje_pausa || '';
+  $('#cfg-aviso').value = c.aviso_superior || '';
+  $('#cfg-wa').value = c.whatsapp || '';
+  $('#cfg-sena').value = c.sena_porcentaje || 10;
+  pintarPuntos();
+};
+
+$('#guardar-config').addEventListener('click', async () => {
+  const wa = $('#cfg-wa').value.replace(/\D/g, '');
+  if (wa.length < 10) return toast('Revisá el WhatsApp: tiene que empezar con 549.', true);
+  try {
+    S.config = await srv('guardarConfig', {
+      tienda_abierta: getSwitch($('#cfg-abierta')) ? 'SI' : 'NO',
+      cuentas_clientas: getSwitch($('#cfg-cuentas')) ? 'SI' : 'NO',
+      mensaje_pausa: $('#cfg-pausa').value, aviso_superior: $('#cfg-aviso').value,
+      whatsapp: wa, sena_porcentaje: Math.max(0, Math.min(100, Number($('#cfg-sena').value) || 0)),
+    });
+    toast('Ajustes guardados');
+  } catch (err) { toast(err, true); }
+});
+
+const pintarPuntos = () => {
+  $('#lista-puntos').innerHTML = S.puntos.map((p, i) => `
+    <div class="punto" data-i="${i}">
+      <input data-k="nombre" value="${esc(p.nombre)}" aria-label="Nombre del punto">
+      <input data-k="minimo" type="number" inputmode="numeric" value="${p.minimo || 0}" aria-label="Mínimo en pesos">
+      <input class="ancho" data-k="detalle" value="${esc(p.detalle)}" placeholder="Dirección u horario (opcional)" aria-label="Detalle">
+      <div class="punto-acciones">
+        <button type="button" class="switch" role="switch" data-k="activo" aria-checked="${p.activo}"><span>Activo</span><span class="pista" aria-hidden="true"></span></button>
+        <button type="button" class="btn btn-danger" data-borrar="${i}">Quitar</button>
+      </div>
+    </div>`).join('');
+};
+
+const leerPuntosDelForm = () => $$('#lista-puntos .punto').map(d => ({
+  nombre: d.querySelector('[data-k=nombre]').value, minimo: d.querySelector('[data-k=minimo]').value,
+  detalle: d.querySelector('[data-k=detalle]').value, activo: getSwitch(d.querySelector('[data-k=activo]')),
+}));
+
+$('#lista-puntos').addEventListener('click', (e) => {
+  const sw = e.target.closest('.switch'); if (sw) return setSwitch(sw, !getSwitch(sw));
+  const b = e.target.closest('[data-borrar]');
+  if (b) { S.puntos = leerPuntosDelForm(); S.puntos.splice(Number(b.dataset.borrar), 1); pintarPuntos(); }
+});
+$('#agregar-punto').addEventListener('click', () => { S.puntos = leerPuntosDelForm(); S.puntos.push({ nombre: '', minimo: 0, activo: true, detalle: '' }); pintarPuntos(); });
+$('#guardar-puntos').addEventListener('click', async () => {
+  try { S.puntos = await srv('guardarPuntos', leerPuntosDelForm()); pintarPuntos(); toast('Puntos guardados'); }
+  catch (err) { toast(err, true); }
+});
+
+const cargarClientas = async () => {
+  if (!S.pedidosConfigurado) { $('#lista-clientas').innerHTML = ''; return; }
+  try {
+    const cs = await srv('listarClientas');
+    $('#lista-clientas').innerHTML = cs.length ? cs.map(c => `
+      <div class="clienta">
+        <div>${esc(c.nombre)}<small>${esc(c.telefono)}${c.tienePin ? '' : ' · PIN reiniciado'}</small></div>
+        ${c.tienePin ? `<button class="btn btn-ghost" data-pin="${esc(c.id)}">Reiniciar PIN</button>` : ''}
+      </div>`).join('') : '<div class="vacio">Todavía nadie creó cuenta.</div>';
+  } catch (err) { $('#lista-clientas').innerHTML = `<div class="vacio">${esc(err)}</div>`; }
+};
+$('#lista-clientas').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-pin]'); if (!b) return;
+  if (!confirm('¿Reiniciar el PIN? La clienta va a poder crear uno nuevo con su WhatsApp.')) return;
+  try { await srv('reiniciarPin', b.dataset.pin); toast('PIN reiniciado'); cargarClientas(); } catch (err) { toast(err, true); }
+});
+
+/* ---------------- Arranque ---------------- */
+(async () => {
+  try {
+    const d = await srv('datosIniciales');
+    Object.assign(S, { productos: d.productos, config: d.config, puntos: d.puntos, estados: d.estados, pedidosConfigurado: d.pedidosConfigurado });
+    $('#usuario').textContent = d.usuario;
+    pintarProductos(); pintarFiltrosPedidos(); actualizarBadge();
+  } catch (err) {
+    $('#lista-productos').innerHTML = `<div class="vacio">No pude cargar el catálogo: ${esc(err)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

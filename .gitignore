@@ -1,0 +1,18 @@
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+*.swp
+
+# Claude Code: solo se sube launch.json (cómo levantar el catálogo para verlo)
+.claude/*
+!.claude/launch.json
+
+# Secretos y datos locales (nunca al repo)
+.env
+*.local.*
+*.csv
+
+# Dependencias, por si algún día hay herramientas
+node_modules/
