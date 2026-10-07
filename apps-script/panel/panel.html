@@ -129,6 +129,7 @@
         background: #168043; color: #fff; font-weight: 700; text-decoration: none; }
   .estado-Nuevo { border-left-color: var(--danger); }
   .aviso-nota { color: var(--danger); font-size: 12.5px; margin-top: 6px; }
+  .codigo-reinicio { background: #f3f1e4; border: 1px solid #c9c79a; border-radius: 12px; padding: 14px; margin: 0 0 12px; font-size: 14px; line-height: 1.4; }
 
   /* ---------- Ajustes ---------- */
   section.bloque { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
@@ -188,7 +189,7 @@
   <div id="vista-ajustes" class="hidden">
     <section class="bloque">
       <h2>Tienda</h2>
-      <p>Estos cambios se ven en el catálogo en unos minutos.</p>
+      <p>Estos cambios se ven en el catálogo en hasta 2 minutos.</p>
       <div class="campo">
         <button type="button" class="switch" id="cfg-abierta" role="switch" aria-checked="true">
           <span>Tomando pedidos</span><span class="pista" aria-hidden="true"></span>
@@ -219,7 +220,8 @@
 
     <section class="bloque">
       <h2>Clientas con cuenta</h2>
-      <p>Si una clienta se olvidó el PIN, reinicialo: podrá crear uno nuevo con su mismo WhatsApp.</p>
+      <p>Si una clienta se olvidó el PIN, tocá <strong>Reiniciar PIN</strong>: te da un código de 6 números para pasárselo por WhatsApp. Con ese código crea un PIN nuevo. Sin el código nadie puede reactivar su cuenta.</p>
+      <div id="codigo-reinicio"></div>
       <div id="lista-clientas"><div class="cargando">Cargando…</div></div>
     </section>
   </div>
@@ -622,14 +624,27 @@ const cargarClientas = async () => {
     $('#lista-clientas').innerHTML = cs.length ? cs.map(c => `
       <div class="clienta">
         <div>${esc(c.nombre)}<small>${esc(c.telefono)}${c.tienePin ? '' : ' · PIN reiniciado'}</small></div>
-        ${c.tienePin ? `<button class="btn btn-ghost" data-pin="${esc(c.id)}">Reiniciar PIN</button>` : ''}
+        <button class="btn btn-ghost" data-pin="${esc(c.id)}">${c.tienePin ? 'Reiniciar PIN' : 'Nuevo código'}</button>
       </div>`).join('') : '<div class="vacio">Todavía nadie creó cuenta.</div>';
   } catch (err) { $('#lista-clientas').innerHTML = `<div class="vacio">${esc(err)}</div>`; }
 };
 $('#lista-clientas').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-pin]'); if (!b) return;
-  if (!confirm('¿Reiniciar el PIN? La clienta va a poder crear uno nuevo con su WhatsApp.')) return;
-  try { await srv('reiniciarPin', b.dataset.pin); toast('PIN reiniciado'); cargarClientas(); } catch (err) { toast(err, true); }
+  if (!confirm('¿Reiniciar el PIN? Se cierran sus sesiones y vas a recibir un código para pasárselo a la clienta.')) return;
+  try {
+    const r = await srv('reiniciarPin', b.dataset.pin);
+    const tel = String(r.telefono).replace(/\D/g, '').slice(-10);
+    const msg = `Hola ${r.nombre}! Tu código para crear un PIN nuevo en el catálogo es ${r.codigo}. Entrá a "Mi cuenta" → "Crear cuenta", poné tu WhatsApp, el PIN nuevo y este código. Vale ${r.horas} horas.`;
+    $('#codigo-reinicio').innerHTML = `
+      <div class="codigo-reinicio" role="status">
+        <div>Código para <strong>${esc(r.nombre)}</strong>:</div>
+        <div style="font-size:30px;font-weight:700;letter-spacing:.2em;margin:6px 0">${esc(r.codigo)}</div>
+        <div>Vale ${esc(r.horas)} horas. Pasáselo por WhatsApp: no se vuelve a mostrar (si lo perdés, tocá "Nuevo código").</div>
+        <a class="wa" style="display:inline-block;margin-top:8px" href="https://api.whatsapp.com/send?phone=549${esc(tel)}&text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Mandarle el código por WhatsApp</a>
+      </div>`;
+    toast('PIN reiniciado');
+    cargarClientas();
+  } catch (err) { toast(err, true); }
 });
 
 /* ---------------- Arranque ---------------- */

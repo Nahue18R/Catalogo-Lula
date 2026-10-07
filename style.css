@@ -2457,6 +2457,9 @@ select {
 }
 
 /* ---------- Medios de pago y Contacto (final de la vista Inicio) ---------- */
+/* (era un style="" en el HTML: la CSP no permite estilos inline) */
+.mc-mezcla { mix-blend-mode: multiply; }
+
 .home-payments {
   padding-bottom: 8px;
 }

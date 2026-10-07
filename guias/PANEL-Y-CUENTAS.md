@@ -73,14 +73,15 @@ Si `API_URL` queda vacía, el catálogo funciona como antes: sin registro, sin c
 | **Pedidos** | Aparecen los pedidos nuevos, con un número rojo en la pestaña. Cada uno trae la clienta, el punto, el detalle, el total y la seña, más un botón para escribirle por WhatsApp. El desplegable cambia el estado: **Nuevo → Seña recibida → En preparación → Listo para retirar → Entregado** (o **Cancelado**). La clienta con cuenta ve ese estado en su celular. |
 | **Ajustes** | **Tomando pedidos** (apagarlo = vacaciones: se puede mirar pero no pedir) y el mensaje de pausa. La franja de avisos, el WhatsApp que recibe los pedidos y el % de seña. Los puntos de encuentro, cada uno con su **mínimo** y un interruptor para ocultarlo. La lista de clientas con cuenta y **Reiniciar PIN**. |
 
-Los cambios tardan unos minutos en verse en el catálogo: la configuración se guarda 5 minutos y el catálogo tiene su propia copia.
+Los cambios tardan hasta unos 2 minutos en verse en el catálogo: la configuración se guarda hasta 2 minutos y el catálogo tiene su propia copia.
 
 ## Cuentas de clientas: cómo funcionan
 
 - La cuenta es **opcional**. En el carrito aparece "¿Querés seguir el estado de tus pedidos? Creá tu cuenta (opcional)".
-- Se crea con **WhatsApp + un PIN de 4 a 6 números**. El PIN **nunca se guarda**: se guarda una huella cifrada (SHA-256 con sal) que no se puede revertir.
-- Después de 5 intentos fallidos, ese número queda bloqueado 15 minutos.
-- **Si una clienta se olvida el PIN:** le escribe a Lula, y Lula toca **Reiniciar PIN** en Ajustes. La clienta vuelve a "Crear cuenta" con su mismo WhatsApp y elige un PIN nuevo; conserva sus pedidos.
+- Se crea con **WhatsApp + un PIN de 6 números**. El PIN **nunca se guarda**: se guarda una huella cifrada (SHA-256 con sal) que no se puede revertir.
+- Después de 5 intentos fallidos, ese número queda bloqueado 15 minutos, y después de 20 en un mismo día, hasta el día siguiente.
+- Nadie verifica que el WhatsApp sea de quien crea la cuenta (no se manda ningún SMS). Por eso la cuenta solo muestra pedidos hechos *con esa cuenta*.
+- **Si una clienta se olvida el PIN:** le escribe a Lula, y Lula toca **Reiniciar PIN** en Ajustes: el panel muestra un **código de 6 números** (vale 48 horas) y un botón para mandárselo por WhatsApp. La clienta va a "Crear cuenta", pone su WhatsApp, un PIN nuevo y ese código; conserva sus pedidos. Reiniciar el PIN también cierra todas sus sesiones abiertas (sirve si le robaron el celular). Sin el código nadie puede quedarse con la cuenta.
 - La sesión dura 90 días en ese celular.
 
 ## Si algo cambia en el código más adelante

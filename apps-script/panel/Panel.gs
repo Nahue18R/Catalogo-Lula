@@ -21,8 +21,14 @@
 /** Cuentas de Google que pueden entrar al panel (en minúscula). */
 const ADMINS = [
   'nahuelruizz18@gmail.com',
-  // 'mail-de-tu-hermana@gmail.com',   ← COMPLETAR
+  'ruiznahirbri@gmail.com',
 ];
+
+/** Las únicas claves de Config que el panel escribe (y la API publica). */
+const CLAVES_CONFIG = ['whatsapp', 'sena_porcentaje', 'tienda_abierta', 'mensaje_pausa', 'aviso_superior', 'cuentas_clientas'];
+
+/** Horas que vale el código con el que una clienta reactiva su cuenta tras un reinicio de PIN. */
+const HORAS_CODIGO_REINICIO = 48;
 
 const ESTADOS = ['Nuevo', 'Seña recibida', 'En preparación', 'Listo para retirar', 'Entregado', 'Cancelado'];
 
@@ -95,7 +101,7 @@ function doGet() {
     return HtmlService.createHtmlOutput(
       '<div style="font-family:sans-serif;padding:40px;text-align:center">' +
       '<h2>Esta página es solo para Lula</h2>' +
-      '<p>Entraste con ' + (Session.getActiveUser().getEmail() || 'una cuenta sin permiso') + '.</p></div>'
+      '<p>Entraste con ' + html_(Session.getActiveUser().getEmail() || 'una cuenta sin permiso') + '.</p></div>'
     ).setTitle('Mi catálogo');
   }
   return HtmlService.createHtmlOutputFromFile('panel')
@@ -319,26 +325,40 @@ function leerPuntos_() {
 
 function guardarConfig(config) {
   exigirAdmin_();
-  const h = hojaConfig_();
-  const v = h.getRange(2, 1, Math.max(1, h.getLastRow() - 1), 2).getValues();
-  Object.keys(config).forEach(k => {
-    // El WhatsApp se guarda como TEXTO: si no, la planilla lo muestra como 5,49E+12
-    let valor = typeof config[k] === 'string' ? seguro_(config[k]) : config[k];
-    if (k === 'whatsapp') valor = "'" + String(valor).replace(/\D/g, '');
-    const i = v.findIndex(r => String(r[0]).trim() === k);
-    if (i !== -1) h.getRange(i + 2, 2).setValue(valor);
-    else h.appendRow([k, valor, '']);
-  });
+  // Con candado: dos cambios a la vez se pisaban. Y solo se escriben las claves conocidas.
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const h = hojaConfig_();
+    const v = h.getRange(2, 1, Math.max(1, h.getLastRow() - 1), 2).getValues();
+    Object.keys(config || {}).filter(k => CLAVES_CONFIG.indexOf(k) !== -1).forEach(k => {
+      // El WhatsApp se guarda como TEXTO: si no, la planilla lo muestra como 5,49E+12
+      let valor = typeof config[k] === 'string' ? seguro_(config[k]) : config[k];
+      if (k === 'whatsapp') valor = "'" + String(valor).replace(/\D/g, '');
+      const i = v.findIndex(r => String(r[0]).trim() === k);
+      if (i !== -1) h.getRange(i + 2, 2).setValue(valor);
+      else h.appendRow([k, valor, '']);
+    });
+  } finally {
+    lock.releaseLock();
+  }
   return leerConfig_();
 }
 
 function guardarPuntos(puntos) {
   exigirAdmin_();
-  const h = hojaPuntos_();
-  if (h.getLastRow() > 1) h.getRange(2, 1, h.getLastRow() - 1, 4).clearContent();
+  // Se arma todo ANTES de tocar la planilla: si algo falla, no se pierden los puntos.
   const filas = (puntos || []).filter(p => String(p.nombre || '').trim())
     .map(p => [seguro_(p.nombre), numero_(p.minimo), p.activo === false ? 'NO' : 'SI', seguro_(p.detalle)]);
-  if (filas.length) h.getRange(2, 1, filas.length, 4).setValues(filas);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const h = hojaPuntos_();
+    if (h.getLastRow() > 1) h.getRange(2, 1, h.getLastRow() - 1, 4).clearContent();
+    if (filas.length) h.getRange(2, 1, filas.length, 4).setValues(filas);
+  } finally {
+    lock.releaseLock();
+  }
   return leerPuntos_();
 }
 
@@ -398,16 +418,50 @@ function listarClientas() {
   })).reverse();
 }
 
-/** La clienta se olvidó el PIN: se borra y puede crear uno nuevo con su mismo WhatsApp. */
+/**
+ * La clienta se olvidó el PIN (o sospecha que alguien lo conoce): se borra el PIN,
+ * se cierran todas sus sesiones y se genera un CÓDIGO de 6 números que Lula le pasa
+ * por WhatsApp. Sin ese código nadie puede reactivar la cuenta, aunque sepa el número.
+ * Devuelve el código (se muestra una sola vez; si se pierde, se reinicia de nuevo).
+ */
 function reiniciarPin(clienteId) {
   exigirAdmin_();
-  const h = planillaPedidos_().getSheetByName('Clientas');
-  const v = h.getDataRange().getValues();
-  const enc = v[0];
-  const i = v.findIndex((r, k) => k > 0 && r[enc.indexOf('id')] === clienteId);
-  if (i < 1) throw new Error('No encontré la clienta.');
-  h.getRange(i + 1, enc.indexOf('pin_hash') + 1).setValue('');
-  return true;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const planilla = planillaPedidos_();
+    const h = planilla.getSheetByName('Clientas');
+    const v = h.getDataRange().getValues();
+    const enc = v[0];
+    const i = v.findIndex((r, k) => k > 0 && r[enc.indexOf('id')] === clienteId);
+    if (i < 1) throw new Error('No encontré la clienta.');
+
+    // Si la planilla se creó antes de que existiera esta columna, se agrega
+    let colReinicio = enc.indexOf('reinicio');
+    if (colReinicio === -1) { colReinicio = enc.length; h.getRange(1, colReinicio + 1).setValue('reinicio'); }
+
+    const codigo = ('000000' + (parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 8), 16) % 1000000)).slice(-6);
+    const vence = Date.now() + HORAS_CODIGO_REINICIO * 3600 * 1000;
+    h.getRange(i + 1, enc.indexOf('pin_hash') + 1).setValue('');
+    h.getRange(i + 1, colReinicio + 1).setValue(sha256_('reinicio:' + clienteId + ':' + codigo) + '|' + vence);
+
+    // Las sesiones abiertas (por ejemplo en un celular robado) dejan de valer
+    const hs = planilla.getSheetByName('Sesiones');
+    if (hs && hs.getLastRow() > 1) {
+      const sesiones = hs.getRange(2, 1, hs.getLastRow() - 1, 3).getValues();
+      for (let k = sesiones.length - 1; k >= 0; k--) {
+        if (String(sesiones[k][1]) === String(clienteId)) hs.deleteRow(k + 2);
+      }
+    }
+    return {
+      codigo: codigo,
+      horas: HORAS_CODIGO_REINICIO,
+      nombre: String(v[i][enc.indexOf('nombre')]),
+      telefono: String(v[i][enc.indexOf('telefono')]),
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /* ================================================================
@@ -433,6 +487,15 @@ function numero_(v) {
 function seguro_(v) {
   const s = String(v == null ? '' : v).trim();
   return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
+
+function html_(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function sha256_(s) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)
+    .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
 }
 
 function slug_(s) {

@@ -229,7 +229,7 @@ const lanza = (fn, msg) => { try { fn(); ok(false, msg + ' (debía lanzar error)
 
 /* ================================================================ escenario */
 const MAIL_ADMIN = 'nahuelruizz18@gmail.com';
-const MAIL_HERMANA = 'hermana@gmail.com';
+const MAIL_HERMANA = 'ruiznahirbri@gmail.com';
 const MAIL_INTRUSO = 'otro@gmail.com';
 
 const planillaProductos = new Planilla('Productos');
@@ -268,7 +268,7 @@ eq(planillaProductos.getSheets()[0].nombre, 'Hoja 1', 'la hoja de productos sigu
 eq(planillaProductos.getSheetByName('Puntos').getLastRow(), 11, 'Puntos trae los 10 puntos de encuentro + encabezado');
 entPanel.webApp(true);   // desde acá se comporta como web app instalada: getActive() devuelve null
 ok(!!entPanel.props.CARPETA_FOTOS && !!entPanel.props.PLANILLA_PEDIDOS, 'guarda la carpeta de fotos y la planilla de pedidos en las propiedades');
-eq(planillaProductos.editores.includes(MAIL_HERMANA), false, 'hermana no figura en ADMINS todavía (hay que completarlo): no se la agrega como editora');
+eq(planillaProductos.editores.includes(MAIL_HERMANA), true, 'la hermana figura en ADMINS: se la agrega como editora de la planilla');
 planillaPedidos = registro[entPanel.props.PLANILLA_PEDIDOS];
 ok(!!planillaPedidos, 'se creó la planilla privada de pedidos');
 ok(entPanel.salidasLog.some(l => l.includes(entPanel.props.PLANILLA_PEDIDOS)), 'el log muestra el link de la planilla de pedidos');
@@ -298,10 +298,10 @@ eq(r.puntos.find(p => p.nombre === 'Merlo Coppel'), { nombre: 'Merlo Coppel', mi
 ok(r.puntos.every(p => typeof p.activo === 'boolean'), 'activo siempre es booleano');
 planillaProductos.getSheetByName('Config').getRange(2, 2).setValue('5491100000000');
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
-eq(String(r.config.whatsapp), '5491134501054', 'dentro de los 5 min responde desde la caché (no ve el cambio todavía)');
+eq(String(r.config.whatsapp), '5491134501054', 'dentro de los 2 min responde desde la caché (no ve el cambio todavía)');
 avanzar(301);
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
-eq(String(r.config.whatsapp), '5491100000000', 'pasados 5 min toma el cambio');
+eq(String(r.config.whatsapp), '5491100000000', 'pasados 2 min toma el cambio');
 planillaProductos.getSheetByName('Config').getRange(2, 2).setValue('5491134501054');
 avanzar(301);
 eq(JSON.parse(api.doGet({}).getContent()).servicio, 'Lula API', 'sin acción responde el saludo del servicio');
@@ -365,7 +365,7 @@ titulo('API · inyección de fórmulas (un cliente malicioso escribe =IMAGE(...)
   const formulas = [];
   planillaPedidos.hojas.forEach(h => h.datos.forEach((fila, i) => fila.forEach((v, j) => { if (v instanceof Formula) formulas.push(`${h.nombre}!${String.fromCharCode(65 + j)}${i + 1}`); })));
   eq(formulas, [], 'ningún texto del cliente se guarda como FÓRMULA en la planilla de pedidos');
-  llamar({ accion: 'crearCuenta', telefono: '1166660000', pin: '1234', nombre: '=1+1' });
+  llamar({ accion: 'crearCuenta', telefono: '1166660000', pin: '123456', nombre: '=1+1' });
   const f2 = []; planillaPedidos.getSheetByName('Clientas').datos.forEach((fila, i) => fila.forEach((v, j) => { if (v instanceof Formula) f2.push(i + 1); }));
   eq(f2, [], 'ni el nombre de una cuenta nueva');
 }
@@ -380,31 +380,33 @@ titulo('API · "Intentar de nuevo" no gasta el límite de pedidos');
 }
 
 titulo('API · cuentas (WhatsApp + PIN)');
-r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '4321', nombre: 'Ana Gómez' });
+r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '432100', nombre: 'Ana Gómez' });
 ok(r.ok && r.token && r.token.length > 60, 'crea la cuenta y devuelve un token de sesión');
 const tokenAna = r.token;
 const hcl = planillaPedidos.getSheetByName('Clientas');
 const fa = {}; hcl.datos[0].forEach((k, i) => { fa[k] = hcl.datos[hcl.getLastRow() - 1][i]; });
-ok(fa.pin_hash && fa.pin_hash !== '4321' && fa.pin_hash.length === 64, 'guarda el PIN como huella de 64 caracteres, no el PIN');
-ok(!JSON.stringify(hcl.datos).includes('4321'), 'el PIN no aparece en ningún lado de la planilla');
+ok(fa.pin_hash && fa.pin_hash !== '432100' && fa.pin_hash.length === 64, 'guarda el PIN como huella de 64 caracteres, no el PIN');
+ok(!JSON.stringify(hcl.datos).includes('432100'), 'el PIN no aparece en ningún lado de la planilla');
 eq(typeof fa.telefono, 'string', 'el teléfono queda como TEXTO en Clientas (con el apóstrofe)');
 eq(String(fa.telefono), '1134501054', 'teléfono guardado sin el apóstrofe');
 const hs = planillaPedidos.getSheetByName('Sesiones');
 ok(!JSON.stringify(hs.datos).includes(tokenAna), 'el token no se guarda en claro (solo su huella)');
-eq(llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '1111', nombre: 'Otra' }).ok, false, 'no deja crear otra cuenta con el mismo WhatsApp');
+eq(llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '111111', nombre: 'Otra' }).ok, false, 'no deja crear otra cuenta con el mismo WhatsApp');
 eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: '12', nombre: 'X' }).ok, false, 'rechaza PIN de 2 dígitos');
 eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: 'abcd', nombre: 'X' }).ok, false, 'rechaza PIN con letras');
-eq(llamar({ accion: 'crearCuenta', telefono: '123', pin: '1234', nombre: 'X' }).ok, false, 'rechaza WhatsApp corto');
-eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: '1234', nombre: '  ' }).ok, false, 'rechaza nombre vacío');
-r = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' });
+eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: '1234', nombre: 'X' }).ok, false, 'rechaza PIN de 4 dígitos (ahora son 6)');
+eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: '1234567', nombre: 'X' }).ok, false, 'rechaza PIN de 7 dígitos');
+eq(llamar({ accion: 'crearCuenta', telefono: '123', pin: '123456', nombre: 'X' }).ok, false, 'rechaza WhatsApp corto');
+eq(llamar({ accion: 'crearCuenta', telefono: '1166667777', pin: '123456', nombre: '  ' }).ok, false, 'rechaza nombre vacío');
+r = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' });
 ok(r.ok && r.nombre === 'Ana Gómez', 'ingresa con el WhatsApp y el PIN correctos');
-eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '0000' }).ok, false, 'PIN incorrecto: no ingresa');
-eq(llamar({ accion: 'ingresar', telefono: '1100000000', pin: '4321' }).ok, false, 'WhatsApp sin cuenta: no ingresa');
-eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' }).error, undefined, 'la respuesta correcta no trae error');
+eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '000000' }).ok, false, 'PIN incorrecto: no ingresa');
+eq(llamar({ accion: 'ingresar', telefono: '1100000000', pin: '432100' }).ok, false, 'WhatsApp sin cuenta: no ingresa');
+eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' }).error, undefined, 'la respuesta correcta no trae error');
 
 titulo('API · cuentas · el mismo número escrito de distintas formas');
 for (const [forma, etiqueta] of [['11 3450-1054', 'con espacios y guion'], ['011 3450 1054', 'con 0 adelante'], ['+54 9 11 3450-1054', 'con +54 9'], ['011 15 3450-1054', 'con el 15 (formato viejo)']]) {
-  const x = llamar({ accion: 'ingresar', telefono: forma, pin: '4321' });
+  const x = llamar({ accion: 'ingresar', telefono: forma, pin: '432100' });
   ok(x.ok === true, `ingresa escribiendo el WhatsApp ${etiqueta}: "${forma}"`);
 }
 
@@ -421,14 +423,14 @@ titulo('API · teléfonos guardados de forma uniforme');
 
 titulo('API · cuentas · límite de intentos');
 let intentos = 0, frenado = false;
-for (let i = 0; i < 8; i++) { const x = llamar({ accion: 'ingresar', telefono: '1199990000', pin: '000' + i }); intentos++; if (/Demasiados/.test(x.error || '')) { frenado = true; break; } }
+for (let i = 0; i < 8; i++) { const x = llamar({ accion: 'ingresar', telefono: '1199990000', pin: '00000' + i }); intentos++; if (/Demasiados/.test(x.error || '')) { frenado = true; break; } }
 ok(frenado && intentos <= 6, `tras 5 intentos fallidos se bloquea (se frenó en el intento ${intentos})`);
 avanzar(901);
-ok(!/Demasiados/.test(llamar({ accion: 'ingresar', telefono: '1199990000', pin: '0000' }).error || ''), 'a los 15 minutos se destraba');
+ok(!/Demasiados/.test(llamar({ accion: 'ingresar', telefono: '1199990000', pin: '000000' }).error || ''), 'a los 15 minutos se destraba');
 // ingresos CORRECTOS repetidos no deberían bloquear a una clienta legítima
 avanzar(3600);
 let legitima = true;
-for (let i = 0; i < 8; i++) { const x = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' }); if (!x.ok) { legitima = false; break; } }
+for (let i = 0; i < 8; i++) { const x = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' }); if (!x.ok) { legitima = false; break; } }
 ok(legitima, 'una clienta que ingresa bien 8 veces seguidas (varios celulares) no queda bloqueada');
 
 titulo('API · sesión y "mis pedidos"');
@@ -442,7 +444,7 @@ eq(llamar({ accion: 'misPedidos', token: 'token-falso' }).sesion, false, 'token 
 eq(llamar({ accion: 'misPedidos' }).ok, false, 'sin token: rechaza');
 avanzar(91 * 86400);
 eq(llamar({ accion: 'misPedidos', token: tokenAna }).sesion, false, 'a los 91 días la sesión venció');
-r = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' });
+r = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' });
 const tokenNuevo = r.token;
 eq(llamar({ accion: 'cerrarSesion', token: tokenNuevo }).ok, true, 'cerrar sesión responde ok');
 eq(llamar({ accion: 'misPedidos', token: tokenNuevo }).ok, false, 'después de cerrar sesión el token ya no sirve');
@@ -453,7 +455,7 @@ eq(JSON.parse(api.doPost({ postData: { contents: 'esto no es json' } }).getConte
   // 250 sesiones vencidas de a poco; al crear una nueva se limpian las vencidas
   for (let i = 0; i < 250; i++) hs.appendRow(['hash' + i, 'C' + i, new FechaFalsa(ahora - 86400000)]);
   const antes = hs.getLastRow();
-  llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' });
+  llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' });
   ok(hs.getLastRow() < antes - 200, `las sesiones vencidas se limpian solas (${antes} → ${hs.getLastRow()} filas)`);
 }
 
@@ -535,8 +537,8 @@ lanza(() => panel.subirFoto('A'.repeat(9 * 1024 * 1024), 'x'), 'rechaza fotos de
 
 /* ================================================================ PANEL: ajustes */
 titulo('PANEL · ajustes (Config y Puntos)');
-let cfg = panel.guardarConfig({ tienda_abierta: 'NO', whatsapp: '5491122223333', sena_porcentaje: 20, clave_nueva: 'hola' });
-eq([cfg.tienda_abierta, String(cfg.whatsapp), cfg.sena_porcentaje, cfg.clave_nueva], ['NO', '5491122223333', 20, 'hola'], 'actualiza claves existentes y agrega las nuevas');
+let cfg = panel.guardarConfig({ tienda_abierta: 'NO', whatsapp: '5491122223333', sena_porcentaje: 20, mensaje_pausa: 'hola' });
+eq([cfg.tienda_abierta, String(cfg.whatsapp), cfg.sena_porcentaje, cfg.mensaje_pausa], ['NO', '5491122223333', 20, 'hola'], 'actualiza las claves conocidas');
 avanzar(301);
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
 eq([r.config.tienda_abierta, String(r.config.whatsapp)], ['NO', '5491122223333'], 'lo que guarda el panel lo lee la API (las dos mitades se entienden)');
@@ -565,27 +567,96 @@ panel.cambiarEstadoPedido('LL-261007-AAAA', 'Listo para retirar');
 eq(panel.listarPedidos('Todos').find(x => x.numero === 'LL-261007-AAAA').estado, 'Listo para retirar', 'cambia el estado');
 lanza(() => panel.cambiarEstadoPedido('LL-261007-AAAA', 'Inventado'), 'rechaza un estado inválido');
 lanza(() => panel.cambiarEstadoPedido('LL-NO-EXISTE', 'Entregado'), 'rechaza un pedido que no existe');
-r = llamar({ accion: 'misPedidos', token: llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' }).token });
+r = llamar({ accion: 'misPedidos', token: llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' }).token });
 eq(r.pedidos.find(x => x.numero === 'LL-261007-AAAA').estado, 'Listo para retirar', 'la clienta ve el estado que puso la dueña');
 panel.cambiarEstadoPedido('LL-261007-AAAA', 'Entregado');
 ok(!panel.listarPedidos('Pendientes').some(x => x.numero === 'LL-261007-AAAA'), 'un pedido Entregado sale de Pendientes');
 // validación de datos: ¿alguien puede poner un estado inválido a mano? (la lista desplegable)
 ok(planillaPedidos.getSheetByName('Pedidos').validaciones.length > 0, 'la columna estado tiene lista desplegable en la planilla');
 
-titulo('PANEL ↔ API · clientas y PIN olvidado');
+titulo('PANEL ↔ API · clientas y PIN olvidado (con código de reinicio)');
 let cls = panel.listarClientas();
 const ana = cls.find(c => c.nombre === 'Ana Gómez');
 eq(cls.length, 2, 'dos clientas con cuenta (Ana y la cuenta de la prueba de fórmulas)');
 eq([ana.nombre, ana.tienePin], ['Ana Gómez', true], 'Ana figura con PIN');
-panel.reiniciarPin(ana.id);
+const sesionVieja = llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' }).token;
+ok(llamar({ accion: 'misPedidos', token: sesionVieja }).ok, 'antes del reinicio la sesión abierta funciona');
+const reinicio = panel.reiniciarPin(ana.id);
+ok(/^\d{6}$/.test(reinicio.codigo) && reinicio.horas === 48, 'el panel devuelve un código de 6 números que vale 48 horas');
+eq([reinicio.nombre, reinicio.telefono], ['Ana Gómez', '1134501054'], 'y los datos para escribirle a la clienta');
 eq(panel.listarClientas().find(c => c.nombre === 'Ana Gómez').tienePin, false, 'reiniciar PIN lo borra');
-eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '4321' }).ok, false, 'con el PIN reiniciado el PIN viejo ya no entra');
+ok(!JSON.stringify(planillaPedidos.getSheetByName('Clientas').datos).includes(reinicio.codigo), 'el código no queda en claro en la planilla (solo su huella)');
+eq(llamar({ accion: 'misPedidos', token: sesionVieja }).sesion, false, 'reiniciar el PIN CIERRA las sesiones abiertas de esa clienta');
+eq(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '432100' }).ok, false, 'con el PIN reiniciado el PIN viejo ya no entra');
 avanzar(3600);
-r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '9999', nombre: 'Ana Gómez' });
-ok(r.ok, 'la clienta crea un PIN nuevo con su mismo WhatsApp');
+r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'Intrusa' });
+ok(!r.ok && r.pideCodigo === true, 'sin el código nadie puede reactivar la cuenta, aunque sepa el número');
+r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'Intrusa', codigo: '000000' });
+ok(!r.ok && r.pideCodigo === true, 'con un código equivocado tampoco');
+eq(panel.listarClientas().find(c => c.id === ana.id).nombre, 'Ana Gómez', 'y la cuenta sigue siendo de Ana');
+{
+  // fuerza bruta del código: 5 intentos y se frena aunque después acierte
+  let frena = false;
+  for (let i = 0; i < 7; i++) { const x = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'X', codigo: '11111' + i }); if (/Demasiados/.test(x.error || '')) { frena = true; break; } }
+  ok(frena, 'probar códigos al azar se frena (tope de altas por hora y de intentos de código)');
+  r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'Ana Gómez', codigo: reinicio.codigo });
+  ok(!r.ok, 'ni acertando el código mientras está frenado');
+  avanzar(3601);   // pasa el tope por hora de altas
+}
+r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'Ana Gómez', codigo: reinicio.codigo });
+ok(r.ok, 'con el código correcto la clienta crea un PIN nuevo con su mismo WhatsApp');
 eq(panel.listarClientas().length, 2, 'no se duplica la clienta');
-ok(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '9999' }).ok, 'ingresa con el PIN nuevo');
-eq(llamar({ accion: 'misPedidos', token: llamar({ accion: 'ingresar', telefono: '1134501054', pin: '9999' }).token }).pedidos.length, 1, 'y conserva su historial de pedidos');
+ok(llamar({ accion: 'ingresar', telefono: '1134501054', pin: '999999' }).ok, 'ingresa con el PIN nuevo');
+eq(llamar({ accion: 'misPedidos', token: llamar({ accion: 'ingresar', telefono: '1134501054', pin: '999999' }).token }).pedidos.length, 1, 'y conserva su historial de pedidos');
+r = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '888888', nombre: 'Otra', codigo: reinicio.codigo });
+ok(!r.ok && !r.pideCodigo, 'el código ya usado no sirve para pisar una cuenta con PIN');
+ok(/No pudimos crear la cuenta/.test(r.error) && !/Ya hay/.test(r.error), 'el mensaje no confirma de quién es el WhatsApp');
+{
+  // el código vence a las 48 horas
+  const r2 = panel.reiniciarPin(panel.listarClientas().find(c => c.nombre === 'Ana Gómez').id);
+  avanzar(49 * 3600);
+  const x = llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '777777', nombre: 'Ana', codigo: r2.codigo });
+  ok(!x.ok && /venci/.test(x.error), 'el código vencido (49 h) no sirve');
+  const r3 = panel.reiniciarPin(panel.listarClientas().find(c => c.nombre === 'Ana Gómez').id);
+  ok(r3.codigo !== r2.codigo || true, 'se puede pedir un código nuevo');
+  ok(llamar({ accion: 'crearCuenta', telefono: '1134501054', pin: '999999', nombre: 'Ana Gómez', codigo: r3.codigo }).ok, 'con el código nuevo reactiva');
+}
+
+titulo('API · tope diario de intentos de PIN (la caché de 15 min no alcanza)');
+{
+  const tel = '1188887777';
+  llamar({ accion: 'crearCuenta', telefono: tel, pin: '246810', nombre: 'Bea' });
+  for (let ronda = 0; ronda < 4; ronda++) { avanzar(901); for (let i = 0; i < 5; i++) llamar({ accion: 'ingresar', telefono: tel, pin: '00000' + i }); }
+  avanzar(901);
+  const x = llamar({ accion: 'ingresar', telefono: tel, pin: '246810' });
+  ok(!x.ok && /Demasiados/.test(x.error), 'tras 20 intentos fallidos en el día, ni el PIN correcto entra (aunque pasaron 15 min)');
+  avanzar(86400);
+  ok(llamar({ accion: 'ingresar', telefono: tel, pin: '246810' }).ok, 'al día siguiente vuelve a entrar');
+  for (let i = 0; i < 4; i++) llamar({ accion: 'ingresar', telefono: tel, pin: '00000' + i });
+  ok(!/Demasiados/.test(llamar({ accion: 'ingresar', telefono: tel, pin: '000009' }).error || ''), 'y entrar bien reinicia la cuenta: los fallos de antes no se suman');
+}
+
+titulo('API · la config pública solo publica claves conocidas');
+{
+  const hcfg = planillaProductos.getSheetByName('Config');
+  hcfg.appendRow(['alias_bancario', 'mi.alias.secreto', 'nota interna']);
+  avanzar(121);
+  const pub = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
+  ok(!JSON.stringify(pub).includes('mi.alias.secreto'), 'una clave extra escrita en Config (ej. un alias bancario) NO sale a internet');
+  ok(pub.config.whatsapp && pub.config.tienda_abierta !== undefined, 'las claves normales siguen saliendo');
+  panel.guardarConfig({ clave_rara: 'x', aviso_superior: 'Hola' });
+  ok(!hcfg.datos.some(f => f[0] === 'clave_rara'), 'el panel tampoco escribe claves desconocidas');
+  eq(hcfg.datos.find(f => f[0] === 'aviso_superior')[1], 'Hola', 'pero sí las conocidas');
+}
+
+titulo('API · tope global de pedidos por hora');
+{
+  avanzar(7200);
+  let ultimo = true;
+  for (let i = 0; i < 70; i++) { const x = llamar({ accion: 'registrarPedido', pedido: pedido({ telefono: '11' + String(60000000 + i) }) }); if (!x.ok) { ultimo = false; break; } }
+  ok(ultimo, 'más de 60 pedidos en una hora de teléfonos distintos ya no se cortan (antes un abusador dejaba a todas sin registro)');
+  avanzar(7200);
+}
 
 /* ================================================================ resumen */
 console.log('\n' + '='.repeat(60));

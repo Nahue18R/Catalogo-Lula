@@ -82,7 +82,7 @@ const servidor = {
   listarPedidos: (f) => db.pedidos.filter(p => !f || f === 'Todos' || p.estado === f || (f === 'Pendientes' && !['Entregado', 'Cancelado'].includes(p.estado))),
   cambiarEstadoPedido: (n, e) => { db.pedidos.find(p => p.numero === n).estado = e; return true; },
   listarClientas: () => db.clientas,
-  reiniciarPin: (id) => { db.clientas.find(c => c.id === id).tienePin = false; return true; },
+  reiniciarPin: (id) => { const c = db.clientas.find(c => c.id === id); c.tienePin = false; return { codigo: '482913', horas: 48, nombre: c.nombre, telefono: c.telefono || '1134501054' }; },
 };
 
 const corredor = (ok, mal) => new Proxy({}, {

@@ -16,7 +16,8 @@
  *   · El PIN nunca se guarda: se guarda sha256(sal + PIN + pimienta).
  *     La pimienta vive en las propiedades del script, no en la planilla.
  *   · La sesión es un token al azar; en la planilla se guarda solo su hash.
- *   · Límite de intentos por teléfono y de pedidos por hora (anti-abuso).
+ *   · Límite de intentos por teléfono (5 cada 15 min y 20 por día) y de pedidos por hora.
+ *   · PIN de 6 números. Si Lula reinicia un PIN, la clienta necesita el código que ella le pasa.
  *   · Esta planilla NO se comparte "con cualquiera que tenga el link".
  * ================================================================
  */
@@ -32,10 +33,20 @@ const HOJA_SESIONES = 'Sesiones';
 
 const COLS_PEDIDOS = ['numero', 'fecha', 'estado', 'cliente_id', 'nombre', 'telefono', 'punto',
   'detalle', 'items_json', 'total', 'sena', 'resto', 'total_verificado', 'notas', 'actualizado'];
-const COLS_CLIENTAS = ['id', 'telefono', 'nombre', 'sal', 'pin_hash', 'creada', 'ultimo_acceso'];
+const COLS_CLIENTAS = ['id', 'telefono', 'nombre', 'sal', 'pin_hash', 'creada', 'ultimo_acceso', 'reinicio'];
 const COLS_SESIONES = ['token_hash', 'cliente_id', 'expira'];
 
 const DIAS_SESION = 90;
+
+/** Claves de la pestaña Config que se publican. Lo demás que alguien escriba ahí NO sale a internet. */
+const CLAVES_PUBLICAS = ['whatsapp', 'sena_porcentaje', 'tienda_abierta', 'mensaje_pausa', 'aviso_superior', 'cuentas_clientas'];
+
+/** Cuántos segundos se guarda la config en caché (el panel avisa "hasta 2 minutos"). */
+const SEGUNDOS_CACHE_CONFIG = 120;
+
+/** Intentos fallidos de PIN: tope corto (por 15 minutos) y tope por día. */
+const MAX_FALLOS_15MIN = 5;
+const MAX_FALLOS_DIA = 20;
 
 /* ================================================================
    INSTALACIÓN — correr UNA vez desde el editor (botón ▶ con "configurar")
@@ -61,6 +72,7 @@ function configurar() {
   // Las columnas técnicas de Clientas y Sesiones se ocultan para no tocarlas por error
   const hc = ss.getSheetByName(HOJA_CLIENTAS);
   hc.hideColumns(COLS_CLIENTAS.indexOf('sal') + 1, 2);
+  hc.hideColumns(COLS_CLIENTAS.indexOf('reinicio') + 1);
   ss.getSheetByName(HOJA_SESIONES).hideSheet();
 
   const props = PropertiesService.getScriptProperties();
@@ -128,7 +140,7 @@ function json_(obj) {
 
 /* ================================================================
    CONFIGURACIÓN (pestañas Config y Puntos de la planilla de productos)
-   Se cachea 5 minutos: el catálogo la pide en cada visita.
+   Se cachea 2 minutos: el catálogo la pide en cada visita.
 ================================================================ */
 function leerConfig_() {
   const cache = CacheService.getScriptCache();
@@ -140,7 +152,8 @@ function leerConfig_() {
   const hc = ss.getSheetByName('Config');
   if (hc && hc.getLastRow() > 1) {
     hc.getRange(2, 1, hc.getLastRow() - 1, 2).getValues().forEach(([k, v]) => {
-      if (String(k).trim()) config[String(k).trim()] = v;
+      const clave = String(k).trim();
+      if (CLAVES_PUBLICAS.indexOf(clave) !== -1) config[clave] = v;
     });
   }
 
@@ -159,7 +172,7 @@ function leerConfig_() {
   }
 
   const salida = { ok: true, config: config, puntos: puntos };
-  cache.put('config', JSON.stringify(salida), 300);
+  cache.put('config', JSON.stringify(salida), SEGUNDOS_CACHE_CONFIG);
   return salida;
 }
 
@@ -187,8 +200,9 @@ function registrarPedido_(d) {
     return { ok: true, numero: p.numero, repetido: true };
   }
 
-  // Anti-abuso: 5 pedidos por teléfono por hora y 60 en total por hora
-  if (!permitir_('ped:' + tel, 5, 3600) || !permitir_('ped:global', 60, 3600)) {
+  // Anti-abuso: 5 pedidos por teléfono por hora y 200 en total por hora (el tope
+  // global es alto a propósito: uno bajo dejaba a un solo abusador sin pedidos para todas)
+  if (!permitir_('ped:' + tel, 5, 3600) || !permitir_('ped:global', 200, 3600)) {
     return { ok: false, error: 'Demasiados pedidos seguidos. Escribinos por WhatsApp.' };
   }
 
@@ -232,7 +246,9 @@ function registrarPedido_(d) {
 /** Recalcula el total con los precios de la planilla (null si no se puede). */
 function totalSegunPlanilla_(items) {
   try {
-    const h = SpreadsheetApp.openById(ID_PLANILLA_PRODUCTOS).getSheets()[0];
+    // La hoja que lee el catálogo es la de gid=0, no "la primera pestaña"
+    const hojas = SpreadsheetApp.openById(ID_PLANILLA_PRODUCTOS).getSheets();
+    const h = hojas.find(x => x.getSheetId() === 0) || hojas[0];
     const v = h.getDataRange().getValues();
     const enc = v[0].map(x => String(x).trim().toLowerCase());
     const col = (n) => enc.indexOf(n);
@@ -279,54 +295,138 @@ function crearCuenta_(d) {
   const pin = String(d.pin || '');
   const nombre = texto_(d.nombre, 80);
   if (tel.length < 8 || tel.length > 15) return { ok: false, error: 'Revisá el número de WhatsApp.' };
-  if (!/^\d{4,6}$/.test(pin)) return { ok: false, error: 'El PIN tiene que tener de 4 a 6 números.' };
+  if (!/^\d{6}$/.test(pin)) return { ok: false, error: 'El PIN tiene que tener 6 números.' };
   if (!nombre) return { ok: false, error: 'Contanos tu nombre.' };
   if (!permitir_('alta:' + tel, 5, 3600)) return { ok: false, error: 'Demasiados intentos. Probá en una hora.' };
 
+  let resultado;
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     const h = ss_().getSheetByName(HOJA_CLIENTAS);
     const existente = buscarFila_(h, 'telefono', tel, COLS_CLIENTAS);
-    // Una cuenta con PIN borrado desde el panel se puede "reactivar" con PIN nuevo
     if (existente && existente.valores.pin_hash) {
-      return { ok: false, error: 'Ya hay una cuenta con ese WhatsApp. Ingresá con tu PIN.' };
+      // Mensaje que no confirma de quién es cada número.
+      return { ok: false, error: 'No pudimos crear la cuenta con ese WhatsApp. Si ya tenés una, ingresá con tu PIN; si no, escribile a Lula.' };
     }
     const sal = Utilities.getUuid();
     const hash = hashPin_(sal, pin);
     if (existente) {
+      // Cuenta con el PIN reiniciado desde el panel: sin el código que le pasó Lula,
+      // cualquiera que supiera el número podría quedarse con la cuenta y su historial.
+      const v = verificarCodigoReinicio_(existente, d.codigo, tel);
+      if (!v.ok) return v;
       const fila = existente.fila;
       h.getRange(fila, COLS_CLIENTAS.indexOf('nombre') + 1).setValue(nombre);
       h.getRange(fila, COLS_CLIENTAS.indexOf('sal') + 1, 1, 2).setValues([[sal, hash]]);
-      return { ok: true, token: crearSesion_(existente.valores.id), nombre: nombre };
+      h.getRange(fila, COLS_CLIENTAS.indexOf('reinicio') + 1).setValue('');
+      borrarSesionesDe_(existente.valores.id);   // una sesión vieja no sobrevive al PIN nuevo
+      resultado = { ok: true, token: crearSesion_(existente.valores.id), nombre: nombre };
+    } else {
+      const id = 'C' + Utilities.getUuid().slice(0, 8).toUpperCase();
+      h.appendRow([id, "'" + tel, nombre, sal, hash, new Date(), new Date(), '']);
+      resultado = { ok: true, token: crearSesion_(id), nombre: nombre };
     }
-    const id = 'C' + Utilities.getUuid().slice(0, 8).toUpperCase();
-    h.appendRow([id, "'" + tel, nombre, sal, hash, new Date(), new Date()]);
-    return { ok: true, token: crearSesion_(id), nombre: nombre };
   } finally {
     lock.releaseLock();
   }
+  limpiarFallos_(tel);
+  return resultado;
+}
+
+/**
+ * El código de reinicio lo genera el panel (Panel.gs → reiniciarPin) y se guarda
+ * como sha256('reinicio:' + id + ':' + código) + '|' + vencimiento en milisegundos.
+ */
+function verificarCodigoReinicio_(cli, codigoIngresado, tel) {
+  const pide = (error) => ({ ok: false, pideCodigo: true, error: error });
+  const codigo = soloDigitos_(codigoIngresado);
+  if (!codigo) return pide('Lula te tiene que pasar un código para reactivar tu cuenta. Pedíselo por WhatsApp.');
+
+  const cache = CacheService.getScriptCache();
+  const clave = 'cod:' + tel;
+  if (Number(cache.get(clave) || 0) >= MAX_FALLOS_15MIN) return pide('Demasiados intentos con el código. Probá en 15 minutos.');
+
+  const partes = String(cli.valores.reinicio || '').split('|');
+  const valido = partes.length === 2 && Number(partes[1]) > Date.now() &&
+    sha256_('reinicio:' + cli.valores.id + ':' + codigo) === partes[0];
+  if (!valido) {
+    cache.put(clave, String(Number(cache.get(clave) || 0) + 1), 900);
+    return pide('El código no es válido o venció. Pedile uno nuevo a Lula.');
+  }
+  cache.remove(clave);
+  return { ok: true };
 }
 
 function ingresar_(d) {
   const tel = normalizarTelefono_(d.telefono);
   const pin = String(d.pin || '');
-  const claveIntentos = 'login:' + tel;
   // Solo los intentos FALLIDOS cuentan: una clienta que entra bien desde su
   // celular y su tablet no debería quedar bloqueada.
-  if (Number(CacheService.getScriptCache().get(claveIntentos) || 0) >= 5) {
-    return { ok: false, error: 'Demasiados intentos. Esperá 15 minutos o pedile a Lula que te reinicie el PIN.' };
+  if (bloqueada_(tel)) {
+    return { ok: false, error: 'Demasiados intentos. Probá más tarde o pedile a Lula que te reinicie el PIN.' };
   }
   const h = ss_().getSheetByName(HOJA_CLIENTAS);
   const cli = buscarFila_(h, 'telefono', tel, COLS_CLIENTAS);
   if (!cli || !cli.valores.pin_hash || hashPin_(cli.valores.sal, pin) !== cli.valores.pin_hash) {
-    const cache = CacheService.getScriptCache();
-    cache.put(claveIntentos, String(Number(cache.get(claveIntentos) || 0) + 1), 900);
+    registrarFallo_(tel);
     return { ok: false, error: 'WhatsApp o PIN incorrectos.' };
   }
-  CacheService.getScriptCache().remove(claveIntentos);
+  limpiarFallos_(tel);
   h.getRange(cli.fila, COLS_CLIENTAS.indexOf('ultimo_acceso') + 1).setValue(new Date());
   return { ok: true, token: crearSesion_(cli.valores.id), nombre: cli.valores.nombre };
+}
+
+/**
+ * Intentos fallidos de PIN por teléfono. Dos topes:
+ *  · 5 cada 15 minutos (CacheService, rápido)
+ *  · 20 por día (propiedades del script): la caché puede vaciarse sola y, con
+ *    solo ese tope, un PIN se podía adivinar con paciencia.
+ */
+function fallosDelDia_() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  let mapa = {};
+  try { mapa = JSON.parse(PropertiesService.getScriptProperties().getProperty('FALLOS') || '{}'); } catch (err) { mapa = {}; }
+  Object.keys(mapa).forEach(t => { if (mapa[t].d !== hoy) delete mapa[t]; });
+  return { mapa: mapa, hoy: hoy };
+}
+
+function guardarFallos_(mapa) {
+  let texto = JSON.stringify(mapa);
+  if (texto.length > 8000) texto = '{}';   // el límite de una propiedad es 9 KB
+  PropertiesService.getScriptProperties().setProperty('FALLOS', texto);
+}
+
+function bloqueada_(tel) {
+  if (Number(CacheService.getScriptCache().get('login:' + tel) || 0) >= MAX_FALLOS_15MIN) return true;
+  const e = fallosDelDia_().mapa[tel];
+  return !!e && e.n >= MAX_FALLOS_DIA;
+}
+
+function registrarFallo_(tel) {
+  const cache = CacheService.getScriptCache();
+  cache.put('login:' + tel, String(Number(cache.get('login:' + tel) || 0) + 1), 900);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const f = fallosDelDia_();
+    f.mapa[tel] = { n: ((f.mapa[tel] || {}).n || 0) + 1, d: f.hoy };
+    guardarFallos_(f.mapa);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function limpiarFallos_(tel) {
+  CacheService.getScriptCache().remove('login:' + tel);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const f = fallosDelDia_();
+    if (f.mapa[tel]) { delete f.mapa[tel]; guardarFallos_(f.mapa); }
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function cerrarSesion_(d) {
@@ -343,6 +443,18 @@ function crearSesion_(clienteId) {
   if (h.getLastRow() > 200) limpiarSesionesVencidas_(h);   // si no, la hoja crece para siempre
   h.appendRow([sha256_(token), clienteId, expira]);
   return token;
+}
+
+/** Cierra TODAS las sesiones de una clienta (por ejemplo, al cambiarle el PIN). */
+function borrarSesionesDe_(clienteId) {
+  const h = ss_().getSheetByName(HOJA_SESIONES);
+  const ultima = h.getLastRow();
+  if (ultima < 2) return;
+  const idx = COLS_SESIONES.indexOf('cliente_id');
+  const datos = h.getRange(2, 1, ultima - 1, COLS_SESIONES.length).getValues();
+  for (let i = datos.length - 1; i >= 0; i--) {
+    if (String(datos[i][idx]) === String(clienteId)) h.deleteRow(i + 2);
+  }
 }
 
 /** Borra las sesiones vencidas (de abajo hacia arriba, para no correr los índices). */
@@ -379,10 +491,17 @@ function sha256_(s) {
 /** Devuelve true si todavía no se superó el límite de `max` en `segundos`. */
 function permitir_(clave, max, segundos) {
   const cache = CacheService.getScriptCache();
-  const n = Number(cache.get(clave) || 0);
-  if (n >= max) return false;
-  cache.put(clave, String(n + 1), segundos);
-  return true;
+  // Con candado: dos pedidos a la vez leían el mismo número y los dos pasaban.
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const n = Number(cache.get(clave) || 0);
+    if (n >= max) return false;
+    cache.put(clave, String(n + 1), segundos);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function buscarFila_(hoja, columna, valor, cols) {

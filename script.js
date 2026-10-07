@@ -3172,13 +3172,15 @@ const renderCuenta = async () => {
           <input id="cta-nombre" class="form-input" autocomplete="name" autocapitalize="words" enterkeyhint="next" required></div>` : ''}
         <div class="form-group"><label for="cta-tel">Tu WhatsApp</label>
           <input id="cta-tel" class="form-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej: 1134501054" enterkeyhint="next" required></div>
-        <div class="form-group"><label for="cta-pin">${crear ? 'Elegí un PIN de 4 a 6 números' : 'PIN'}</label>
+        <div class="form-group"><label for="cta-pin">${crear ? 'Elegí un PIN de 6 números' : 'PIN'}</label>
           <input id="cta-pin" class="form-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6"
                  autocomplete="${crear ? 'new-password' : 'current-password'}" enterkeyhint="go" required></div>
+        ${crear ? `<div class="form-group hidden" id="grupo-codigo"><label for="cta-codigo">Código que te pasó Lula</label>
+          <input id="cta-codigo" class="form-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" enterkeyhint="go"></div>` : ''}
         ${crear ? '<p class="cuenta-legal">Usamos tu nombre y WhatsApp solo para gestionar tus pedidos. Podés pedir que borremos tu cuenta cuando quieras.</p>' : ''}
         <p class="cuenta-error hidden" id="cta-error" role="alert"></p>
         <button type="submit" class="btn-agregar cuenta-submit">${crear ? 'Crear mi cuenta' : 'Ingresar'}</button>
-        ${!crear ? '<p class="cuenta-ayuda">¿Te olvidaste el PIN? Escribile a Lula por WhatsApp y te lo reinicia.</p>' : ''}
+        ${!crear ? '<p class="cuenta-ayuda">¿Te olvidaste el PIN? Escribile a Lula por WhatsApp: te pasa un código y con él creás uno nuevo en «Crear cuenta».</p>' : ''}
       </form>`;
     const tel = document.getElementById('campo-telefono');
     if (tel && tel.value) document.getElementById('cta-tel').value = tel.value;
@@ -3233,14 +3235,23 @@ const enviarFormCuenta = async (e) => {
   const mostrarError = (m) => { err.textContent = m; err.classList.remove('hidden'); };
   if (crear && !nombre) return mostrarError('Contanos tu nombre.');
   if (tel.length < 8) return mostrarError('Revisá tu WhatsApp: tiene que tener al menos 8 números.');
-  if (!/^\d{4,6}$/.test(pin)) return mostrarError('El PIN tiene que tener de 4 a 6 números.');
+  if (!/^\d{6}$/.test(pin)) return mostrarError('El PIN tiene que tener 6 números.');
 
   err.classList.add('hidden');
   btn.disabled = true;
   btn.textContent = crear ? 'Creando…' : 'Ingresando…';
   try {
-    const r = await apiPost(crear ? 'crearCuenta' : 'ingresar', { telefono: tel, pin, nombre });
-    if (!r.ok) { mostrarError(r.error || 'No pudimos hacerlo.'); return; }
+    const codigo = crear ? (document.getElementById('cta-codigo')?.value || '').replace(/\D/g, '') : '';
+    const r = await apiPost(crear ? 'crearCuenta' : 'ingresar', { telefono: tel, pin, nombre, codigo });
+    if (!r.ok) {
+      mostrarError(r.error || 'No pudimos hacerlo.');
+      // Cuenta con el PIN reiniciado por Lula: hace falta el código que ella le pasó
+      if (r.pideCodigo) {
+        const g = document.getElementById('grupo-codigo');
+        if (g) { g.classList.remove('hidden'); document.getElementById('cta-codigo').focus(); }
+      }
+      return;
+    }
     guardarSesion({ token: r.token, nombre: r.nombre, telefono: tel });
     // Se completan los datos del checkout para el próximo pedido
     const cn = document.getElementById('campo-nombre');

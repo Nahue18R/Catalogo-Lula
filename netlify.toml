@@ -9,9 +9,24 @@
   command = "mkdir -p dist && cp index.html style.css script.js logo-header.png favicon.png og-image.jpg dist/"
   publish = "dist"
 
+# Cabeceras de seguridad.
+#
+# Content-Security-Policy: el navegador solo ejecuta el script.js del propio
+# sitio y solo habla con los dominios de abajo. Aunque algún día se colara
+# código en una descripción de la planilla, no podría correr ni mandar datos
+# a otro lado. Si se suma un dominio (otra fuente, otras fotos, la API en
+# otro lado), hay que agregarlo acá o el navegador lo bloquea.
+#   · img-src https:      las fotos pueden ser de Drive o de cualquier URL https
+#   · connect-src         la planilla (docs.google.com, que redirige a
+#                         *.googleusercontent.com) y la API de Apps Script
+#   · style-src / font-src  Google Fonts (Montserrat)
 [[headers]]
   for = "/*"
   [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://script.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    Strict-Transport-Security = "max-age=31536000"
+    Cross-Origin-Opener-Policy = "same-origin"

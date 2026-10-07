@@ -10,7 +10,7 @@ Catálogo web de figuras de yeso **sin pintar**. Las clientas arman su pedido de
 - Carrito que se conserva al salir y volver
 - Pedido por WhatsApp con número de pedido, seña y resto calculados, y punto de encuentro
 - Mínimo de compra por punto de encuentro
-- Cuenta opcional (WhatsApp + PIN) para ver sus pedidos y en qué estado están
+- Cuenta opcional (WhatsApp + PIN de 6 números) para ver sus pedidos y en qué estado están
 
 **Para la dueña (panel "Mi catálogo")**
 - Cargar, editar, pausar y destacar productos desde el celular
