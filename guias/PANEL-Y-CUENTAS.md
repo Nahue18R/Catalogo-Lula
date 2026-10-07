@@ -22,7 +22,7 @@ Al terminar vas a tener:
      'mail-de-tu-hermana@gmail.com',
    ];
    ```
-5. Tocá el **+** al lado de "Archivos" → **HTML**, y nombralo exactamente `panel` (sin `.html`). Pegá ahí el contenido de `apps-script/panel/panel.html`.
+5. Tocá el **+** al lado de "Archivos" → **HTML**, y nombralo exactamente `panel` (sin `.html`, **todo en minúscula**: con `Panel` el panel da error de archivo no encontrado). Pegá ahí el contenido de `apps-script/panel/panel.html`.
 6. Guardá (ícono del disquete).
 7. En la barra de arriba elegí la función **`configurar`** y tocá **▶ Ejecutar**. Google va a pedir permisos: **Revisar permisos → tu cuenta → Configuración avanzada → Ir a (no seguro) → Permitir**. Es normal: el script es tuyo y Google no lo verificó.
 8. Abrí **Ver → Registros**. Vas a ver dos links; **copiá el de la "Planilla de pedidos"**, lo usás en el Paso 2.
@@ -35,6 +35,8 @@ Al terminar vas a tener:
 10. Esa URL es **el panel**. Mandásela a tu hermana. En el celular: abrir en Chrome → menú ⋮ → **Agregar a pantalla principal**. Queda como una app.
 
 > Solo entran los mails de `ADMINS`. Cualquier otra persona ve "Esta página es solo para Lula".
+>
+> Si la pantalla carga pero no responde nada, o aparece un cartel rojo "ERROR DEL PANEL", sacale una captura: dice la línea exacta que falla.
 
 ## Paso 2 — La API (en la planilla PRIVADA de pedidos)
 

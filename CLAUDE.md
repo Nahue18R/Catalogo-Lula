@@ -29,7 +29,7 @@ Hermana (celular) ──► Panel "Mi catálogo" (Apps Script, apps-script/panel
 - **Planilla de productos:** es PÚBLICA (cualquiera con el link), así que nunca puede tener datos de clientas. Columnas por nombre: `id, nombre, categoria, descripcion, medidas, precio_unitario, precio_pack_10, precio_pack_20, imagen_id, activo, destacado`.
 - **Planilla privada:** pestañas `Pedidos`, `Clientas` y `Sesiones`. Estados de un pedido: Nuevo → Seña recibida → En preparación → Listo para retirar → Entregado / Cancelado.
 - **`API_URL` vacía** (así está hoy en `script.js`): el catálogo funciona sin registro, sin cuentas y con la config de respaldo que está en el código. Todo lo de la API tiene que degradar sin romper nada.
-- La instalación de los dos Apps Script está en `guias/PANEL-Y-CUENTAS.md`. **Todavía no se instalaron**: el código Apps Script está escrito y revisado de sintaxis, pero nunca corrió dentro de Google.
+- **Los dos Apps Script YA están instalados** (7/10/2026, con la cuenta de Nahuel; la hermana es editora y está en `ADMINS`). La API responde y `API_URL` está puesta en `script.js`; un pedido y una cuenta de prueba llegaron bien a la planilla privada. Instalación y reinstalación: `guias/PANEL-Y-CUENTAS.md`. Cada cambio en un `.gs` o en `panel.html` hay que pegarlo en el editor de Google **y publicar una versión nueva** (Implementar → Administrar implementaciones → ✏️ → Nueva versión), si no la URL sigue sirviendo el código viejo.
 
 ## Decisiones técnicas que importan
 
@@ -77,10 +77,12 @@ Hermana (celular) ──► Panel "Mi catálogo" (Apps Script, apps-script/panel
 - **`aria-label` sobre un `<span>` no lo lee nadie.** El nombre accesible del carrito se pone en el botón (`actualizarUIGlobal`).
 - **Abrir `index.html` con doble clic (`file://`)** no puede leer la planilla (CORS) y muestra la copia de respaldo. Probar siempre con un servidor: `python -m http.server 8123`.
 
+- **El panel (`panel.html`) dentro de Google:** el script falló en Google con `Unexpected token 'class'` aunque en Chrome local andaba perfecto. Se arregló en tres pasos y no se sabe cuál fue el decisivo, así que se conservan los tres: (1) sin entidades HTML escritas a mano en el JS (`esc()` usa `\x26`), (2) **sin plantillas de texto anidadas** (un `` ` `` dentro de un `${}`; usar helpers como `htmlThumb`), (3) el programa va en `<script type="text/plain" id="app-src">` y un cargador lo inyecta y **muestra el error exacto en pantalla** (cartel rojo con la línea) si algo falla. No quitar el cargador. Para verificar a mano que no haya plantillas anidadas hay un chequeo simple (contar `` ` `` dentro de `${…}`). El nombre del archivo HTML en Apps Script tiene que ser `panel` en minúscula (`createHtmlOutputFromFile('panel')` distingue mayúsculas).
+
 ## Pendientes (en orden)
 
-0. **Antes de instalar:** correr `node tests/apps-script-harness.js` (debe dar 0 fallas).
-1. **Instalar los Apps Script** siguiendo `guias/PANEL-Y-CUENTAS.md`, agregar el mail de la hermana en `ADMINS` y pegar la URL en `API_URL`. Corregir lo que falle en el primer uso real.
+0. Después de tocar cualquier `.gs`: `node tests/apps-script-harness.js` (debe dar 0 fallas).
+1. **Hecho:** Apps Script instalados y conectados. Falta que la **hermana** entre al panel con su cuenta (pantalla "Google no verificó esta app": Avanzado → Continuar), lo guarde en la pantalla de inicio del celular y lo pruebe. Borrar de la planilla privada el pedido y la cuenta de prueba de Nahuel.
 2. **Planilla:** corregir las 5 descripciones que dicen "pintada a mano" (Virgen de Luján, Maceta Corazón, Gauchito Gil, Ángel Custodio, Muñequita Quinceañera). Solo 4 de 45 productos tienen foto.
 3. **Probar en un iPhone y un Android reales** (scroll bloqueado, notch, zoom, teclado).
 4. **Al publicar en Netlify** (conectado al repo; `netlify.toml` ya filtra los archivos): poner en `og:image` / `og:url` la URL absoluta (`https://…/og-image.jpg`), o WhatsApp no muestra la vista previa.
