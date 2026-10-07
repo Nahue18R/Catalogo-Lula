@@ -42,7 +42,7 @@
 
   /* ---------- Controles ---------- */
   .search { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--card); }
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; scrollbar-width: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0 4px; }
   .chips button { flex-shrink: 0; border: 1px solid var(--border); background: var(--card); border-radius: 999px;
                   padding: 8px 14px; font-size: 13px; font-weight: 600; min-height: 40px; }
   .chips button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
@@ -510,11 +510,14 @@ $('#filtros-ped').addEventListener('click', (e) => {
   S.filtroPed = b.dataset.e; pintarFiltrosPedidos(); cargarPedidos();
 });
 
+let pedidosSolicitud = 0;
 const cargarPedidos = async () => {
+  const mia = ++pedidosSolicitud;   // si tocó otro filtro mientras cargaba, esta respuesta ya no vale
   if (!S.pedidosConfigurado) { $('#lista-pedidos').innerHTML = '<div class="vacio">Falta configurar la planilla de pedidos (ver guía).</div>'; return; }
   $('#lista-pedidos').innerHTML = '<div class="cargando">Cargando pedidos…</div>';
   try {
     const pedidos = await srv('listarPedidos', S.filtroPed);
+    if (mia !== pedidosSolicitud) return;
     if (!pedidos.length) { $('#lista-pedidos').innerHTML = '<div class="vacio">No hay pedidos acá.</div>'; return; }
     $('#lista-pedidos').innerHTML = pedidos.map(p => {
       const f = p.fecha ? new Date(p.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
@@ -531,13 +534,14 @@ const cargarPedidos = async () => {
         ${p.notas ? `<div class="aviso-nota">${esc(p.notas)}</div>` : ''}
         <div class="pedido-acciones">
           <select data-num="${esc(p.numero)}" aria-label="Estado del pedido ${esc(p.numero)}">
+            ${S.estados.indexOf(p.estado) === -1 ? `<option selected disabled>${esc(p.estado || 'Sin estado')}</option>` : ''}
             ${S.estados.map(e => `<option ${e === p.estado ? 'selected' : ''}>${esc(e)}</option>`).join('')}
           </select>
           <a class="wa" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>
         </div>
       </article>`;
     }).join('');
-  } catch (err) { $('#lista-pedidos').innerHTML = `<div class="vacio">${esc(err)}</div>`; }
+  } catch (err) { if (mia === pedidosSolicitud) $('#lista-pedidos').innerHTML = `<div class="vacio">${esc(err)}</div>`; }
 };
 
 $('#lista-pedidos').addEventListener('change', async (e) => {
@@ -566,19 +570,21 @@ const pintarAjustes = () => {
   $('#cfg-pausa').value = c.mensaje_pausa || '';
   $('#cfg-aviso').value = c.aviso_superior || '';
   $('#cfg-wa').value = c.whatsapp || '';
-  $('#cfg-sena').value = c.sena_porcentaje || 10;
+  $('#cfg-sena').value = (c.sena_porcentaje === '' || c.sena_porcentaje == null) ? 10 : c.sena_porcentaje;
   pintarPuntos();
 };
 
 $('#guardar-config').addEventListener('click', async () => {
   const wa = $('#cfg-wa').value.replace(/\D/g, '');
   if (wa.length < 10) return toast('Revisá el WhatsApp: tiene que empezar con 549.', true);
+  const sena = parseFloat(String($('#cfg-sena').value).replace(',', '.'));
+  if (!Number.isFinite(sena) || sena < 0 || sena > 100) return toast('La seña tiene que ser un número entre 0 y 100.', true);
   try {
     S.config = await srv('guardarConfig', {
       tienda_abierta: getSwitch($('#cfg-abierta')) ? 'SI' : 'NO',
       cuentas_clientas: getSwitch($('#cfg-cuentas')) ? 'SI' : 'NO',
       mensaje_pausa: $('#cfg-pausa').value, aviso_superior: $('#cfg-aviso').value,
-      whatsapp: wa, sena_porcentaje: Math.max(0, Math.min(100, Number($('#cfg-sena').value) || 0)),
+      whatsapp: wa, sena_porcentaje: sena,
     });
     toast('Ajustes guardados');
   } catch (err) { toast(err, true); }

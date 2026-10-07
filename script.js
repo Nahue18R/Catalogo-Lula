@@ -2473,7 +2473,15 @@ const generarNumeroPedido = () => {
   return `LL-${fecha}-${azar}`;
 };
 
+/**
+ * WhatsApp pone en negrita lo que va entre *asteriscos*, en cursiva entre _guiones_,
+ * tachado con ~ y monoespaciado con `. Sacarlos de los textos de la clienta y de
+ * los nombres de la planilla evita que el mensaje se arme raro.
+ */
+const sinFormatoWA = (s) => String(s ?? '').replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
+
 const generarMensajeWhatsApp = (nombre, telefono, punto, numero = '') => {
+  nombre = sinFormatoWA(nombre); telefono = sinFormatoWA(telefono); punto = sinFormatoWA(punto);
   const total = calcularTotal();
   const sena  = calcularSena(total);
   const resto = total - sena;
@@ -2500,7 +2508,7 @@ const generarMensajeWhatsApp = (nombre, telefono, punto, numero = '') => {
     msg += `\n\u{1F4E6} *UNIDADES SUELTAS:*\n`;
     unidades.forEach(i => {
       // • Nombre × cantidad → precio
-      msg += `   \u2022 ${i.nombre} \u00D7 ${i.cantidad} \u2192 ${formatCurrency(i.precio * i.cantidad)}\n`;
+      msg += `   \u2022 ${sinFormatoWA(i.nombre)} \u00D7 ${i.cantidad} \u2192 ${formatCurrency(i.precio * i.cantidad)}\n`;
     });
   }
 
@@ -2509,7 +2517,7 @@ const generarMensajeWhatsApp = (nombre, telefono, punto, numero = '') => {
     // 🎁 PACKS:
     msg += `\n\u{1F381} *PACKS:*\n`;
     packs.forEach(i => {
-      msg += `   \u2022 ${i.nombre} (${i.tipoLabel}) \u00D7 ${i.cantidad} \u2192 ${formatCurrency(i.precio * i.cantidad)}\n`;
+      msg += `   \u2022 ${sinFormatoWA(i.nombre)} (${i.tipoLabel}) \u00D7 ${i.cantidad} \u2192 ${formatCurrency(i.precio * i.cantidad)}\n`;
     });
   }
 

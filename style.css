@@ -2052,6 +2052,7 @@ select {
 }
 
 .hero-btn {
+  min-height:         44px;
   padding:            13px 28px;
   border-radius:      var(--r-pill);
   font-size:          11.5px;
@@ -2182,6 +2183,7 @@ select {
 }
 
 .home-view-all {
+  min-height:     44px;
   padding:        9px 20px;
   border:         1.5px solid var(--clr-primary);
   border-radius:  var(--r-pill);
