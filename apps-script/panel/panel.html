@@ -289,7 +289,8 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const S = { productos: [], config: {}, puntos: [], estados: [], filtroProd: 'todos', filtroPed: 'Pendientes', editando: null, fotos: [], subiendo: 0 };
 
-const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Las entidades HTML se arman con códigos y no escritas a mano: dentro de Google el script no llegaba a ejecutarse.
+const esc = (s) => String(s == null ? '' : s).replace(/[\x26\x3c\x3e\x22\x27]/g, c => '\x26#' + c.charCodeAt(0) + ';');
 const plata = (n) => '$ ' + Math.round(Number(n) || 0).toLocaleString('es-AR');
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
