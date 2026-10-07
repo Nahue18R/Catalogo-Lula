@@ -292,17 +292,17 @@ entApi.webApp(true);     // desde acá se comporta como web app instalada: getAc
 titulo('API · doGet ?accion=config');
 let r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
 ok(r.ok === true, 'responde ok');
-eq(String(r.config.whatsapp), '5491134501054', 'whatsapp llega entero (se guarda como TEXTO: si no, la planilla lo muestra como 5,49E+12)');
+eq(String(r.config.whatsapp), '5491134862998', 'whatsapp llega entero (se guarda como TEXTO: si no, la planilla lo muestra como 5,49E+12)');
 eq(r.puntos.length, 10, '10 puntos de encuentro');
 eq(r.puntos.find(p => p.nombre === 'Merlo Coppel'), { nombre: 'Merlo Coppel', minimo: 12000, activo: true, detalle: '' }, 'Merlo Coppel con su mínimo');
 ok(r.puntos.every(p => typeof p.activo === 'boolean'), 'activo siempre es booleano');
 planillaProductos.getSheetByName('Config').getRange(2, 2).setValue('5491100000000');
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
-eq(String(r.config.whatsapp), '5491134501054', 'dentro de los 2 min responde desde la caché (no ve el cambio todavía)');
+eq(String(r.config.whatsapp), '5491134862998', 'dentro de los 2 min responde desde la caché (no ve el cambio todavía)');
 avanzar(301);
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
 eq(String(r.config.whatsapp), '5491100000000', 'pasados 2 min toma el cambio');
-planillaProductos.getSheetByName('Config').getRange(2, 2).setValue('5491134501054');
+planillaProductos.getSheetByName('Config').getRange(2, 2).setValue('5491134862998');
 avanzar(301);
 eq(JSON.parse(api.doGet({}).getContent()).servicio, 'Lula API', 'sin acción responde el saludo del servicio');
 
@@ -542,7 +542,7 @@ eq([cfg.tienda_abierta, String(cfg.whatsapp), cfg.sena_porcentaje, cfg.mensaje_p
 avanzar(301);
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
 eq([r.config.tienda_abierta, String(r.config.whatsapp)], ['NO', '5491122223333'], 'lo que guarda el panel lo lee la API (las dos mitades se entienden)');
-panel.guardarConfig({ tienda_abierta: 'SI', whatsapp: '5491134501054', sena_porcentaje: 10 });
+panel.guardarConfig({ tienda_abierta: 'SI', whatsapp: '5491134862998', sena_porcentaje: 10 });
 let pts = panel.guardarPuntos([{ nombre: 'Esc 61', minimo: '0', activo: true, detalle: 'Sáb 10 a 12' }, { nombre: 'Merlo Coppel', minimo: '12.000', activo: true, detalle: '' }, { nombre: '  ', minimo: 5 }, { nombre: 'Punto viejo', minimo: 0, activo: false }]);
 eq(pts.length, 3, 'descarta puntos sin nombre');
 eq(pts.find(p => p.nombre === 'Merlo Coppel').minimo, 12000, 'mínimo "12.000" → 12000');

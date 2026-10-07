@@ -154,7 +154,7 @@ const state = {
 let PORCENTAJE_SENA = 0.10;
 
 /** Número de WhatsApp al que se envía el pedido (código país + número) */
-let WHATSAPP_NUMBER = '5491134501054';
+let WHATSAPP_NUMBER = '5491134862998';
 
 /** Interruptores de la tienda (pestaña Config) */
 const CONFIG = {

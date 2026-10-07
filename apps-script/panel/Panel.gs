@@ -36,7 +36,7 @@ const COLUMNAS_PRODUCTO = ['id', 'nombre', 'categoria', 'descripcion', 'medidas'
   'precio_pack_10', 'precio_pack_20', 'imagen_id', 'activo', 'destacado'];
 
 const CONFIG_INICIAL = [
-  ['whatsapp',         "'5491134501054", 'Número que recibe los pedidos (con 549, sin + ni espacios)'],
+  ['whatsapp',         "'5491134862998", 'Número que recibe los pedidos (con 549, sin + ni espacios)'],
   ['sena_porcentaje',  10,              'Porcentaje de seña para confirmar un pedido'],
   ['tienda_abierta',   'SI',            'NO = pausa: se puede mirar el catálogo pero no enviar pedidos'],
   ['mensaje_pausa',    'Estamos de vacaciones. Volvemos a tomar pedidos pronto.', 'Lo que ven las clientas cuando la tienda está en pausa'],
