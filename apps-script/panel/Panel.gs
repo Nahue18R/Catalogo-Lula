@@ -37,10 +37,10 @@ const COLUMNAS_PRODUCTO = ['id', 'nombre', 'categoria', 'descripcion', 'medidas'
 
 const CONFIG_INICIAL = [
   ['whatsapp',         "'5491134862998", 'Número que recibe los pedidos (con 549, sin + ni espacios)'],
-  ['sena_porcentaje',  10,              'Porcentaje de seña para confirmar un pedido'],
+  ['sena_porcentaje',  20,              'Porcentaje de seña para confirmar un pedido'],
   ['tienda_abierta',   'SI',            'NO = pausa: se puede mirar el catálogo pero no enviar pedidos'],
   ['mensaje_pausa',    'Estamos de vacaciones. Volvemos a tomar pedidos pronto.', 'Lo que ven las clientas cuando la tienda está en pausa'],
-  ['aviso_superior',   'Figuras de yeso sin pintar, listas para pintar · Pedidos por WhatsApp · Entregas los sábados', 'Franja de arriba de todo'],
+  ['aviso_superior',   'Figuras de yeso sin pintar, listas para pintar · Pedidos por WhatsApp · Entregas a coordinar', 'Franja de arriba de todo'],
   ['cuentas_clientas', 'SI',            'SI = las clientas pueden crear cuenta para ver sus pedidos'],
 ];
 

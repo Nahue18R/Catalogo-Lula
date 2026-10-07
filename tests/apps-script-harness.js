@@ -314,7 +314,7 @@ ok(r.ok === true && r.numero === p1.numero, 'registra un pedido válido');
 const hp = planillaPedidos.getSheetByName('Pedidos');
 const fila = () => { const e = hp.datos[0], u = hp.datos[hp.getLastRow() - 1]; const o = {}; e.forEach((k, i) => { o[k] = u[i]; }); return o; };
 let f = fila();
-eq([f.total, f.sena, f.resto], [20000, 2000, 18000], 'total $20.000, seña $2.000 (10%), resto $18.000');
+eq([f.total, f.sena, f.resto], [20000, 4000, 16000], 'total $20.000, seña $4.000 (20%), resto $16.000');
 eq(f.estado, 'Nuevo', 'estado inicial Nuevo');
 eq(f.total_verificado, 20000, 'recalcula el total con los precios de la planilla ($10.000 x2) y coincide');
 eq(f.notas, '', 'sin advertencias');
@@ -355,7 +355,7 @@ for (const [pct, total, esperada] of [[10, 12000, 1200], [15, 12000, 1800], [7, 
   llamar({ accion: 'registrarPedido', pedido: pedido({ telefono: '11' + Math.floor(Math.random() * 1e8), items: [{ id: 'x', nombre: 'Item', tipo: 'unidad', cantidad: 1, precio: total }] }) });
   eq(fila().sena, esperada, `seña ${pct}% de $${total} = $${esperada}`);
 }
-hc.getRange(filaSena, 2).setValue(10); avanzar(301);
+hc.getRange(filaSena, 2).setValue(20); avanzar(301);
 
 /* ================================================================ API: cuentas */
 titulo('API · inyección de fórmulas (un cliente malicioso escribe =IMAGE(...) como nombre)');
@@ -542,7 +542,7 @@ eq([cfg.tienda_abierta, String(cfg.whatsapp), cfg.sena_porcentaje, cfg.mensaje_p
 avanzar(301);
 r = JSON.parse(api.doGet({ parameter: { accion: 'config' } }).getContent());
 eq([r.config.tienda_abierta, String(r.config.whatsapp)], ['NO', '5491122223333'], 'lo que guarda el panel lo lee la API (las dos mitades se entienden)');
-panel.guardarConfig({ tienda_abierta: 'SI', whatsapp: '5491134862998', sena_porcentaje: 10 });
+panel.guardarConfig({ tienda_abierta: 'SI', whatsapp: '5491134862998', sena_porcentaje: 20 });
 let pts = panel.guardarPuntos([{ nombre: 'Esc 61', minimo: '0', activo: true, detalle: 'Sáb 10 a 12' }, { nombre: 'Merlo Coppel', minimo: '12.000', activo: true, detalle: '' }, { nombre: '  ', minimo: 5 }, { nombre: 'Punto viejo', minimo: 0, activo: false }]);
 eq(pts.length, 3, 'descarta puntos sin nombre');
 eq(pts.find(p => p.nombre === 'Merlo Coppel').minimo, 12000, 'mínimo "12.000" → 12000');

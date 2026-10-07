@@ -150,8 +150,8 @@ const state = {
    Config y Puntos de la planilla (ver cargarConfig), que tu hermana
    edita desde su panel. Si la API no responde, se usan estos. */
 
-/** Porcentaje de seña al confirmar el pedido (0.10 = 10%) */
-let PORCENTAJE_SENA = 0.10;
+/** Porcentaje de seña al confirmar el pedido (0.20 = 20%) */
+let PORCENTAJE_SENA = 0.20;
 
 /** Número de WhatsApp al que se envía el pedido (código país + número) */
 let WHATSAPP_NUMBER = '5491134862998';
@@ -1104,7 +1104,7 @@ const tarjetaCompra = (p) => {
             data-id="${p.id}"
             aria-label="Tipo de compra para ${nom}"
           >
-            ${opcionesTipo(p, tipoSel)}
+            ${opcionesTipo(p, tipoSel, tarjetaAngosta())}
           </select>
 
           <button
@@ -1166,7 +1166,7 @@ const tarjetaLista = (p) => {
             data-id="${p.id}"
             aria-label="Tipo de compra para ${nom}"
           >
-            ${opcionesTipo(p, tipoSel)}
+            ${opcionesTipo(p, tipoSel, tarjetaAngosta())}
           </select>
           <button
             class="btn-agregar"
@@ -1335,12 +1335,19 @@ const infoPack = (p, tipo) => {
 };
 
 /** Opciones de presentación (unidad / pack10 / pack20) para las cards. */
-const opcionesTipo = (p, tipoSel) =>
+const opcionesTipo = (p, tipoSel, corto = false) =>
   ['unidad', 'pack10', 'pack20'].map(t =>
     `<option value="${t}" ${tipoSel === t ? 'selected' : ''}>
-       ${TIPO_LABELS[t]} — ${formatCurrency(getPrecio(p, t))}
+       ${TIPO_LABELS[t]}${corto ? '' : ` — ${formatCurrency(getPrecio(p, t))}`}
      </option>`
   ).join('');
+
+/**
+ * En celulares angostos la tarjeta mide ~140 px: "Unidad — $ 850" se cortaba en
+ * "Unic". Ahí la opción lleva solo el nombre; el precio ya está arriba y cambia
+ * al elegir otra presentación.
+ */
+const tarjetaAngosta = () => window.matchMedia('(max-width: 480px)').matches;
 
 /** Renderiza los checkboxes de categoría del sidebar (con contador). */
 const renderChecksCategorias = () => {
@@ -2124,7 +2131,7 @@ const renderDetalle = () => {
             </li>
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              <span>Entregas los <strong>sábados</strong> en los puntos de encuentro</span>
+              <span>Entregas <strong>a coordinar</strong> en los puntos de encuentro</span>
             </li>
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7" r="1.2"/><circle cx="16" cy="10" r="1.2"/><path d="M12 22a2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a2 2 0 0 0 2-2v-1"/></svg>
@@ -2525,13 +2532,13 @@ const generarMensajeWhatsApp = (nombre, telefono, punto, numero = '') => {
   msg += `\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n`;
   // 💰 Total del pedido:
   msg += `\u{1F4B0} *Total del pedido:* ${formatCurrency(total)}\n`;
-  // ✅ Seña para confirmar (10%):
+  // ✅ Seña para confirmar:
   msg += `\u2705 *Se\u00F1a para confirmar (${pctSena()}):* ${formatCurrency(sena)}\n`;
   // 🔄 Resto a abonar al retirar:
   msg += `\u{1F504} *Resto a abonar al retirar:* ${formatCurrency(resto)}\n`;
   msg += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n`;
-  // 📅 Las entregas son los sábados...
-  msg += `Las entregas son los s\u00E1bados. Te enviamos el horario exacto una vez confirmado.`;
+  // 📅 Las entregas se coordinan...
+  msg += `Las entregas se coordinan: te escribimos para acordar d\u00EDa y horario una vez confirmado.`;
 
   return msg;
 };

@@ -548,7 +548,7 @@ function normalizarTelefono_(v) {
  */
 function calcularSena_(total, porcentaje) {
   const pct = Number(porcentaje);
-  const centesimas = Math.round((pct >= 0 && pct <= 100 ? pct : 10) * 100);
+  const centesimas = Math.round((pct >= 0 && pct <= 100 ? pct : 20) * 100);
   return Math.ceil((total * centesimas) / 10000);
 }
 function texto_(v, max) {

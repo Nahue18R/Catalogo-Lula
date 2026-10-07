@@ -3369,7 +3369,7 @@ button:not(:disabled):active,
   }
   .checkbox-row { min-height: 44px; }
   .sidebar-clear { min-height: 44px; padding: 0 8px; }
-  .product-name.card-open { min-height: 44px; }
+  /* .product-name.card-open: el área de toque de 44 px la da su ::after (ver arriba) */
 
   /* Con letra de 16px el selector de orden no entraba ("DESTACADOS PRIM"):
      en móvil ocupa el ancho disponible y sin mayúsculas espaciadas */
@@ -3703,4 +3703,46 @@ a.header-brand { color: inherit; text-decoration: none; }
   #main-header { position: absolute; }
   .header-adbar { display: none; }
   .sticky-bar { min-height: 52px; }
+}
+
+/* ================================================================
+   Celulares angostos o con la letra del sistema agrandada (≤ 400 px).
+   En el encabezado quedaban el logo, el nombre cortado en "L. L. C",
+   el subtítulo en cuatro líneas y el botón de cuenta encima del texto.
+   El logo ya dice "Lula Luján Creaciones": se saca el texto repetido y
+   el logo gana tamaño. (El link sigue teniendo su aria-label.)
+================================================================ */
+@media (max-width: 400px) {
+  .header-brand-text { display: none; }
+  .header-logo { height: 48px; }
+  .nav-head-main { gap: 8px 8px; padding: 10px 12px; }
+  .header-cart { padding: 8px 10px; }
+  .header-cuenta { padding: 8px 10px; }
+  /* "COMPRAR" con la letra del sistema agrandada se cortaba en la tarjeta de 140 px */
+  .btn-agregar { letter-spacing: 0.5px; padding-left: 4px; padding-right: 4px; }
+}
+
+/* ================================================================
+   Carrito en celulares (≤ 480 px): dos renglones por producto.
+   En una sola fila entraban foto + nombre + [− 1 +] + precio + ✕ y el
+   nombre quedaba con ancho cero (el carrito mostraba la foto, los botones
+   y un precio cortado, pero no QUÉ producto era).
+     renglón 1:  foto · nombre y tipo · ✕
+     renglón 2:  [− 1 +] ······················ precio
+================================================================ */
+@media (max-width: 480px) {
+  .cart-item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "img info remove"
+      "qty qty precio";
+    align-items: center;
+    gap: 8px 10px;
+  }
+  .cart-item-img    { grid-area: img; }
+  .cart-item-info   { grid-area: info; }
+  .cart-item-remove { grid-area: remove; align-self: start; }
+  .cart-item-qty    { grid-area: qty; justify-self: start; }
+  .cart-item-precio { grid-area: precio; justify-self: end; font-size: 14px; }
 }

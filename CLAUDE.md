@@ -1,6 +1,6 @@
 # Lula Luján Creaciones — catálogo web
 
-Catálogo online del emprendimiento de la **hermana de Nahuel**: figuras de yeso **SIN PINTAR** (santería, macetas, souvenirs, combos de bandeja + porta sahumerios), zona oeste del GBA. Las clientas llegan por un link de WhatsApp **desde el celular**, arman el carrito y el pedido sale por WhatsApp. Se cobra una seña (10% por defecto) y el resto al retirar; las entregas son los sábados en puntos de encuentro.
+Catálogo online del emprendimiento de la **hermana de Nahuel**: figuras de yeso **SIN PINTAR** (santería, macetas, souvenirs, combos de bandeja + porta sahumerios), zona oeste del GBA. Las clientas llegan por un link de WhatsApp **desde el celular**, arman el carrito y el pedido sale por WhatsApp. Se cobra una seña (20% por defecto; se cambia desde el panel) y el resto al retirar; las entregas se coordinan con la clienta (antes eran los sábados) en puntos de encuentro.
 
 ## Reglas que no se discuten
 
