@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vista previa del panel (datos de ejemplo)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  VISTA PREVIA del panel "Mi catálogo" SIN Google.
+
+  Carga el panel real (apps-script/panel/panel.html) y reemplaza
+  google.script.run por un servidor falso que vive en memoria, con datos de
+  ejemplo. Sirve para ver y retocar el diseño del panel sin instalar nada.
+  Nada de lo que se hace acá se guarda: al recargar vuelve todo al principio.
+
+  Usar con el servidor local, desde la raíz del proyecto:
+      python -m http.server 8123
+  y abrir  http://localhost:8123/tests/panel-preview.html
+
+  Esta carpeta (tests/) NO se publica: netlify.toml solo copia los archivos del sitio.
+-->
+<script>
+'use strict';
+/* ------------------------------------------------------------------ datos */
+const FOTO = location.origin + '/og-image.jpg';
+const db = {
+  productos: [
+    { id: '5',  nombre: 'Mix Safari',                           categoria: 'Combo',     descripcion: 'Bandeja y porta sahumerios.', medidas: 'BDJ 11x11 cm, PS 6-7cm', precio_unitario: 850,  precio_pack_10: 7000,  precio_pack_20: 12500, imagenes: [FOTO], activo: true,  destacado: true },
+    { id: '28', nombre: 'Bandeja Ovalada + Loto + Floreros',    categoria: 'Combo',     descripcion: 'Bandeja ovalada, loto y floreros.', medidas: '', precio_unitario: 1300, precio_pack_10: 11000, precio_pack_20: 20000, imagenes: [], activo: true,  destacado: true },
+    { id: '34', nombre: 'Virgen de Luján',                      categoria: 'Santería',  descripcion: 'Virgen de Luján en yeso, lista para pintar.', medidas: '20 cm', precio_unitario: 2800, precio_pack_10: 24000, precio_pack_20: 44000, imagenes: [FOTO, FOTO], activo: true,  destacado: true },
+    { id: '36', nombre: 'Maceta Rústica',                       categoria: 'Macetas',   descripcion: '', medidas: '15 cm de diámetro', precio_unitario: 1800, precio_pack_10: 15500, precio_pack_20: 28000, imagenes: [], activo: true,  destacado: false },
+    { id: '38', nombre: 'Souvenir Mini Novia',                  categoria: 'Souvenirs', descripcion: '', medidas: '8 cm', precio_unitario: 900,  precio_pack_10: 7500,  precio_pack_20: 13000, imagenes: [FOTO], activo: true,  destacado: false },
+    { id: '41', nombre: 'Marco Floral Vintage',                 categoria: 'Decoración',descripcion: '', medidas: '25 x 30 cm', precio_unitario: 3500, precio_pack_10: 30000, precio_pack_20: 56000, imagenes: [], activo: false, destacado: false },
+  ].map((p, i) => ({ ...p, fila: i + 2 })),
+  config: {
+    whatsapp: '5491134501054', sena_porcentaje: 10, tienda_abierta: 'SI',
+    mensaje_pausa: 'Estamos de vacaciones. Volvemos a tomar pedidos pronto.',
+    aviso_superior: 'Figuras de yeso sin pintar, listas para pintar · Pedidos por WhatsApp · Entregas los sábados',
+    cuentas_clientas: 'SI',
+  },
+  puntos: [
+    ['Esc 61', 0, true, 'Sábados de 10 a 12'], ['YPF Mariló', 0, true, ''], ['Cruce Castelar', 0, true, ''],
+    ['Moreno Hospital', 0, true, ''], ['Barrio Güemes', 0, true, ''], ['San Miguel Catedral', 0, true, ''],
+    ['Ex Vea', 0, false, ''], ['Morón Anses', 0, true, ''], ['Merlo Coppel', 12000, true, 'Entrada del estacionamiento'],
+    ['Feria del Zanjón', 0, true, ''],
+  ].map(([nombre, minimo, activo, detalle]) => ({ nombre, minimo, activo, detalle })),
+  pedidos: [
+    { fila: 4, numero: 'LL-261003-K7QM', fecha: '2026-10-03T15:20:00Z', estado: 'Nuevo', nombre: 'Ana Gómez', telefono: '1134501054', punto: 'Esc 61',
+      detalle: '2 × Mix Safari (Pack x10)\n1 × Virgen de Luján (Unidad)', total: 16800, sena: 1680, notas: '', cuenta: true },
+    { fila: 3, numero: 'LL-261002-X2TD', fecha: '2026-10-02T11:05:00Z', estado: 'Seña recibida', nombre: 'Marta Ruiz', telefono: '1155667788', punto: 'Merlo Coppel',
+      detalle: '1 × Bandeja Ovalada + Loto + Floreros (Pack x20)', total: 20000, sena: 2000, notas: '', cuenta: false },
+    { fila: 2, numero: 'LL-260928-A9PF', fecha: '2026-09-28T18:40:00Z', estado: 'Entregado', nombre: 'Lucía Pereyra', telefono: '1166778899', punto: 'Cruce Castelar',
+      detalle: '5 × Souvenir Mini Novia (Unidad)', total: 4500, sena: 450, notas: '', cuenta: true },
+  ],
+  clientas: [
+    { id: 'C1A2B3C4', nombre: 'Ana Gómez', telefono: '1134501054', tienePin: true, ultimo: '2026-10-03T15:18:00Z' },
+    { id: 'C5D6E7F8', nombre: 'Lucía Pereyra', telefono: '1166778899', tienePin: false, ultimo: '' },
+  ],
+  estados: ['Nuevo', 'Seña recibida', 'En preparación', 'Listo para retirar', 'Entregado', 'Cancelado'],
+};
+
+/* ---------------------------------------------- el "servidor" (en memoria) */
+const num = (v) => Math.floor(Number(String(v ?? '').replace(/\D/g, '')) || 0);
+const servidor = {
+  datosIniciales: () => ({ usuario: 'lula@ejemplo.com', productos: db.productos, config: db.config, puntos: db.puntos, estados: db.estados, pedidosConfigurado: true }),
+  guardarProducto: (p) => {
+    const nombre = String(p.nombre || '').trim();
+    if (!nombre) throw new Error('El producto necesita un nombre.');
+    if (!(num(p.precio_unitario) > 0)) throw new Error('Falta el precio por unidad.');
+    const nuevo = { id: p.id, nombre, categoria: p.categoria || 'Otros', descripcion: p.descripcion || '', medidas: p.medidas || '',
+      precio_unitario: num(p.precio_unitario), precio_pack_10: num(p.precio_pack_10), precio_pack_20: num(p.precio_pack_20),
+      imagenes: p.imagenes || [], activo: p.activo !== false, destacado: !!p.destacado };
+    const i = db.productos.findIndex(x => x.fila === Number(p.fila));
+    if (i === -1) { nuevo.id = String(Math.max(0, ...db.productos.map(x => num(x.id))) + 1); nuevo.fila = db.productos.length + 2; db.productos.push(nuevo); }
+    else db.productos[i] = { ...nuevo, fila: db.productos[i].fila };
+    return db.productos;
+  },
+  cambiarInterruptor: (id, fila, campo, valor) => { db.productos.find(x => x.fila === Number(fila))[campo] = !!valor; return true; },
+  borrarProducto: (id, fila) => { db.productos = db.productos.filter(x => x.fila !== Number(fila)); return db.productos; },
+  subirFoto: () => FOTO,
+  guardarConfig: (c) => Object.assign(db.config, c),
+  guardarPuntos: (ps) => (db.puntos = ps.filter(p => String(p.nombre).trim()).map(p => ({ nombre: p.nombre.trim(), minimo: num(p.minimo), activo: p.activo !== false, detalle: p.detalle || '' }))),
+  listarPedidos: (f) => db.pedidos.filter(p => !f || f === 'Todos' || p.estado === f || (f === 'Pendientes' && !['Entregado', 'Cancelado'].includes(p.estado))),
+  cambiarEstadoPedido: (n, e) => { db.pedidos.find(p => p.numero === n).estado = e; return true; },
+  listarClientas: () => db.clientas,
+  reiniciarPin: (id) => { db.clientas.find(c => c.id === id).tienePin = false; return true; },
+};
+
+const corredor = (ok, mal) => new Proxy({}, {
+  get: (_, nombre) => {
+    if (nombre === 'withSuccessHandler') return (f) => corredor(f, mal);
+    if (nombre === 'withFailureHandler') return (f) => corredor(ok, f);
+    return (...args) => setTimeout(() => {
+      try {
+        const r = servidor[nombre](...args);
+        ok && ok(JSON.parse(JSON.stringify(r === undefined ? null : r)));
+      } catch (e) { mal && mal({ message: e.message }); }
+    }, 140);
+  },
+});
+window.google = { script: { run: corredor(null, null) } };
+
+/* ------------------------------------------- cargar el panel REAL encima */
+fetch('../apps-script/panel/panel.html', { cache: 'no-store' })
+  .then(r => r.text())
+  .then(html => {
+    document.open(); document.write(html); document.close();
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.insertAdjacentHTML('beforeend',
+        '<div style="position:fixed;top:0;right:0;z-index:99;background:#b3261e;color:#fff;font:700 10px/1 sans-serif;letter-spacing:.08em;padding:5px 9px;border-bottom-left-radius:8px;pointer-events:none">VISTA PREVIA · EJEMPLO</div>');
+    });
+  });
+</script>
+</head>
+<body></body>
+</html>

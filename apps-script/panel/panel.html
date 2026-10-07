@@ -67,9 +67,13 @@
   .item-abrir { all: unset; cursor: pointer; display: block; min-width: 0; }
   .item-nombre { font-weight: 700; font-size: 14px; line-height: 1.3; }
   .item-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .item { min-width: 0; }
   .item-switches { grid-column: 1 / -1; display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+  /* En pantallas de 320 px los dos interruptores no entran lado a lado: se apilan.
+     Sin esto empujaban la tarjeta y ensanchaban TODA la página. */
+  @media (max-width: 359px) { .item-switches { flex-direction: column; } }
 
-  .switch { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  .switch { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px;
             border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; min-height: 44px;
             background: none; font-size: 13px; font-weight: 600; }
   .switch .pista { width: 40px; height: 24px; border-radius: 12px; background: #cfcac0; position: relative; transition: background .15s ease-out; flex-shrink: 0; }
@@ -122,7 +126,7 @@
   .pedido-acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .pedido-acciones select { flex: 1; min-width: 170px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; background: var(--card); }
   .wa { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; min-height: 48px; border-radius: 10px;
-        background: #25d366; color: #fff; font-weight: 700; text-decoration: none; }
+        background: #168043; color: #fff; font-weight: 700; text-decoration: none; }
   .estado-Nuevo { border-left-color: var(--danger); }
   .aviso-nota { color: var(--danger); font-size: 12.5px; margin-top: 6px; }
 
@@ -130,6 +134,7 @@
   section.bloque { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
   section.bloque h2 { margin: 0 0 4px; font-size: 16px; }
   section.bloque > p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .punto-cabecera { display: grid; grid-template-columns: 1fr 100px; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); padding-bottom: 6px; }
   .punto { display: grid; grid-template-columns: 1fr 100px; gap: 8px; padding: 12px 0; border-top: 1px solid var(--border); }
   .punto input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; width: 100%; }
   .punto .ancho { grid-column: 1 / -1; }
@@ -512,7 +517,7 @@ const cargarPedidos = async () => {
     $('#lista-pedidos').innerHTML = pedidos.map(p => {
       const f = p.fecha ? new Date(p.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
       const tel = String(p.telefono).replace(/\D/g, '');
-      const wa = 'https://api.whatsapp.com/send?phone=' + (tel.startsWith('54') ? tel : '549' + tel) +
+      const wa = 'https://api.whatsapp.com/send?phone=549' + tel.slice(-10) +
         '&text=' + encodeURIComponent(`Hola ${p.nombre}! Te escribo por tu pedido ${p.numero}.`);
       return `
       <article class="pedido">
@@ -578,7 +583,11 @@ $('#guardar-config').addEventListener('click', async () => {
 });
 
 const pintarPuntos = () => {
-  $('#lista-puntos').innerHTML = S.puntos.map((p, i) => `
+  // Encabezado fijo: sin él la segunda columna ("0") no decía qué era
+  const cabecera = S.puntos.length
+    ? '<div class="punto-cabecera" aria-hidden="true"><span>Nombre del punto</span><span>Mínimo ($)</span></div>'
+    : '<div class="vacio">Todavía no hay puntos. Tocá "+ Agregar punto".</div>';
+  $('#lista-puntos').innerHTML = cabecera + S.puntos.map((p, i) => `
     <div class="punto" data-i="${i}">
       <input data-k="nombre" value="${esc(p.nombre)}" aria-label="Nombre del punto">
       <input data-k="minimo" type="number" inputmode="numeric" value="${p.minimo || 0}" aria-label="Mínimo en pesos">

@@ -24,6 +24,7 @@ Catálogo web de figuras de yeso **sin pintar**. Las clientas arman su pedido de
 index.html            Página (vistas Inicio y Tienda, carrito, ficha y cuenta)
 style.css             Estilos, mobile-first
 script.js             Toda la lógica (vanilla JS, sin dependencias)
+netlify.toml          Qué archivos se publican en Netlify (solo los del sitio)
 logo-header.png       Logo del header (versión liviana)
 favicon.png           Ícono de la pestaña
 og-image.jpg          Vista previa al compartir el link
@@ -31,6 +32,9 @@ Logo.png              Logo original en alta resolución (fuente de los anteriore
 apps-script/
   panel/              Panel de administración (Apps Script, en la planilla de productos)
   api/                API de pedidos, cuentas y configuración (Apps Script, en la planilla privada)
+tests/
+  apps-script-harness.js  Prueba la lógica de los Apps Script sin Google (node tests/apps-script-harness.js)
+  panel-preview.html      Muestra el panel con datos de ejemplo (sin Google)
 guias/
   PANEL-Y-CUENTAS.md  Instalación del panel y la API, paso a paso
   PUBLICAR-CATALOGO.md Cómo verlo en local y cómo publicarlo

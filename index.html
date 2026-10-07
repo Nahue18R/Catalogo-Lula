@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <!-- Color de la barra del navegador = la franja superior del sitio -->
-  <meta name="theme-color" content="#8a6639" />
+  <!-- Color de la barra del navegador = lo que hay arriba de todo: la franja beige
+       en escritorio, el header blanco en el celular (donde la franja se oculta) -->
+  <meta name="theme-color" media="(min-width: 640px)" content="#8a6639" />
+  <meta name="theme-color" media="(max-width: 639px)" content="#ffffff" />
 
   <!-- Vista previa al compartir el link por WhatsApp / redes.
        og:image y og:url necesitan la dirección FINAL del sitio (https://…):
@@ -24,6 +27,9 @@
   <!-- Google Fonts: Montserrat (300, 400, 700) — igual a la tienda de referencia -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Las fotos salen de Google Drive: abrir la conexión antes ahorra un viaje al mostrar la primera -->
+  <link rel="preconnect" href="https://drive.google.com" />
+  <link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin />
   <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
@@ -35,13 +41,13 @@
        HEADER FIJO (estilo tienda de referencia)
        Barra superior + marca + búsqueda + carrito + chips de filtro
   ============================================================ -->
-  <header id="main-header" role="banner">
+  <header id="main-header">
     <!-- Barra superior -->
     <div class="header-adbar">Figuras de yeso sin pintar, listas para pintar · Pedidos por WhatsApp · Entregas los sábados</div>
 
     <!-- Fila principal: marca + navegación + búsqueda + acceso al carrito -->
     <div class="nav-head-main">
-      <div class="header-brand" id="brand-home" role="link" tabindex="0" aria-label="Ir a la página de inicio">
+      <a class="header-brand" id="brand-home" href="./" aria-label="Lula Luján Creaciones, ir al inicio">
         <img
           src="logo-header.png"
           alt="Logo Lula Luján Creaciones"
@@ -53,7 +59,7 @@
           <p class="header-title">Lula Luján Creaciones</p>
           <p class="header-subtitle">Figuras de yeso artesanales</p>
         </div>
-      </div>
+      </a>
 
       <!-- Navegación principal: Inicio / Tienda -->
       <nav class="header-nav" aria-label="Navegación principal">
@@ -92,14 +98,14 @@
         <svg class="header-cart-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         <span class="header-cart-label">Mi pedido</span>
         <strong class="header-cart-total" id="cart-total-top">$0</strong>
-        <span id="cart-badge-top" class="cart-badge header-cart-badge hidden" aria-label="Cantidad de items en el carrito">0</span>
+        <span id="cart-badge-top" class="cart-badge header-cart-badge hidden" aria-hidden="true">0</span>
       </button>
     </div>
 
     <!-- Chips de filtro por categoría (generados por JS) -->
-    <div class="filter-chips-wrapper" role="navigation" aria-label="Filtrar por categoría">
+    <nav class="filter-chips-wrapper" aria-label="Filtrar por categoría">
       <div class="filter-chips" id="filter-chips"></div>
-    </div>
+    </nav>
   </header>
 
   <!-- ============================================================
@@ -108,7 +114,7 @@
        2) Tienda: lista de productos tipo colección (breadcrumb,
           título + contador, orden, grilla y paginación)
   ============================================================ -->
-  <main id="main-content" role="main">
+  <main id="main-content">
 
     <!-- Tienda en pausa (Config → tienda_abierta = NO) -->
     <div id="banner-pausa" class="banner-pausa hidden" role="status">
@@ -146,7 +152,11 @@
           <button type="button" class="home-view-all" id="ver-todos-destacados">Ver todos</button>
         </div>
         <div class="home-carousel" id="home-destacados">
-          <!-- Cards generadas por script.js -->
+          <!-- Esqueleto hasta que llegan los productos; script.js lo reemplaza -->
+          <div class="home-card skeleton-card" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+          <div class="home-card skeleton-card" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+          <div class="home-card skeleton-card" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+          <div class="home-card skeleton-card" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
         </div>
       </section>
 
@@ -159,7 +169,13 @@
           </div>
         </div>
         <div class="home-categories" id="home-categories">
-          <!-- Tiles generados por script.js -->
+          <!-- Esqueleto hasta que llegan los productos; script.js lo reemplaza -->
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
+          <div class="home-cat skeleton-cat" aria-hidden="true"><div class="skeleton-img"></div><div class="skeleton-line short"></div></div>
         </div>
       </section>
 
@@ -335,7 +351,6 @@
                     min="0"
                     step="100"
                     inputmode="numeric"
-                    aria-label="Precio mínimo"
                   />
                   <span class="price-sep" aria-hidden="true">–</span>
                   <label class="sr-only" for="filtro-precio-max">Precio máximo</label>
@@ -346,7 +361,6 @@
                     min="0"
                     step="100"
                     inputmode="numeric"
-                    aria-label="Precio máximo"
                   />
                 </div>
                 <div class="price-range" id="price-range">
@@ -485,7 +499,7 @@
             <button type="button" id="btn-reintentar-offline" class="btn-reintentar">Reintentar</button>
           </div>
 
-          <div class="product-grid" id="product-grid" aria-label="Catálogo de productos">
+          <div class="product-grid" id="product-grid">
             <!-- Cards generadas dinámicamente por script.js -->
           </div>
           <p id="no-results" class="no-results hidden" role="status">
@@ -504,16 +518,16 @@
        BARRA STICKY INFERIOR
        Siempre visible: muestra el total y botón para abrir el carrito
   ============================================================ -->
-  <div id="sticky-bar" class="sticky-bar" role="complementary" aria-label="Resumen del carrito">
+  <aside id="sticky-bar" class="sticky-bar" aria-label="Resumen del carrito">
     <div class="sticky-info">
       <span class="sticky-label">Total del carrito</span>
       <span id="sticky-total" class="sticky-total">$0</span>
     </div>
-    <button id="btn-ver-carrito" class="btn-ver-carrito" aria-haspopup="dialog" aria-expanded="false">
-      <span id="cart-badge" class="cart-badge hidden" aria-label="Cantidad de items en el carrito">0</span>
+    <button type="button" id="btn-ver-carrito" class="btn-ver-carrito" aria-haspopup="dialog" aria-expanded="false">
+      <span id="cart-badge" class="cart-badge hidden" aria-hidden="true">0</span>
       Ver Carrito
     </button>
-  </div>
+  </aside>
 
   <!-- ============================================================
        OVERLAY (fondo oscuro detrás del panel del carrito)
@@ -539,7 +553,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         Tu Carrito
       </h2>
-      <button id="btn-cerrar-carrito" class="btn-cerrar" aria-label="Cerrar carrito">
+      <button type="button" id="btn-cerrar-carrito" class="btn-cerrar" aria-label="Cerrar carrito">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -692,7 +706,7 @@
     <div class="cart-handle" aria-hidden="true"></div>
     <div class="cart-panel-header">
       <h2 class="cart-panel-title" id="cuenta-titulo">Mi cuenta</h2>
-      <button id="btn-cerrar-cuenta" class="btn-cerrar" aria-label="Cerrar mi cuenta">
+      <button type="button" id="btn-cerrar-cuenta" class="btn-cerrar" aria-label="Cerrar mi cuenta">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>

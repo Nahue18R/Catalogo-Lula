@@ -30,7 +30,7 @@ const COLUMNAS_PRODUCTO = ['id', 'nombre', 'categoria', 'descripcion', 'medidas'
   'precio_pack_10', 'precio_pack_20', 'imagen_id', 'activo', 'destacado'];
 
 const CONFIG_INICIAL = [
-  ['whatsapp',         '5491134501054', 'Número que recibe los pedidos (con 549, sin + ni espacios)'],
+  ['whatsapp',         "'5491134501054", 'Número que recibe los pedidos (con 549, sin + ni espacios)'],
   ['sena_porcentaje',  10,              'Porcentaje de seña para confirmar un pedido'],
   ['tienda_abierta',   'SI',            'NO = pausa: se puede mirar el catálogo pero no enviar pedidos'],
   ['mensaje_pausa',    'Estamos de vacaciones. Volvemos a tomar pedidos pronto.', 'Lo que ven las clientas cuando la tienda está en pausa'],
@@ -52,25 +52,11 @@ const PUNTOS_INICIALES = [
 function configurar() {
   const ss = SpreadsheetApp.getActive();
   const props = PropertiesService.getScriptProperties();
+  // Se guarda el ID: en una web app instalada getActive() puede venir vacío.
+  props.setProperty('SS_ID', ss.getId());
 
-  // Pestaña Config
-  let hc = ss.getSheetByName('Config');
-  if (!hc) {
-    hc = ss.insertSheet('Config');
-    hc.getRange(1, 1, 1, 3).setValues([['clave', 'valor', 'para qué sirve']]).setFontWeight('bold');
-    hc.getRange(2, 1, CONFIG_INICIAL.length, 3).setValues(CONFIG_INICIAL);
-    hc.setFrozenRows(1);
-    hc.autoResizeColumns(1, 3);
-  }
-
-  // Pestaña Puntos
-  let hp = ss.getSheetByName('Puntos');
-  if (!hp) {
-    hp = ss.insertSheet('Puntos');
-    hp.getRange(1, 1, 1, 4).setValues([['nombre', 'minimo', 'activo', 'detalle (dirección / horario)']]).setFontWeight('bold');
-    hp.getRange(2, 1, PUNTOS_INICIALES.length, 4).setValues(PUNTOS_INICIALES);
-    hp.setFrozenRows(1);
-  }
+  hojaConfig_();   // las crea si faltan (y las vuelve a crear si alguien las borra)
+  hojaPuntos_();
 
   // Carpeta de fotos en Drive
   let carpetaId = props.getProperty('CARPETA_FOTOS');
@@ -129,7 +115,46 @@ function exigirAdmin_() {
 /* ================================================================
    PRODUCTOS
 ================================================================ */
-function hojaProductos_() { return SpreadsheetApp.getActive().getSheets()[0]; }
+/** La planilla de productos, abierta por ID (en una web app getActive() puede venir vacío). */
+function ss_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SS_ID');
+  return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActive();
+}
+
+/**
+ * La hoja que lee el catálogo es la de gid=0 (la original), NO "la primera
+ * pestaña": si alguien arrastra otra pestaña al primer lugar, el panel
+ * editaría una hoja distinta de la que ven las clientas.
+ */
+function hojaProductos_() {
+  const hojas = ss_().getSheets();
+  return hojas.find(h => h.getSheetId() === 0) || hojas[0];
+}
+
+function hojaConfig_() {
+  const ss = ss_();
+  let h = ss.getSheetByName('Config');
+  if (!h) {
+    h = ss.insertSheet('Config');
+    h.getRange(1, 1, 1, 3).setValues([['clave', 'valor', 'para qué sirve']]).setFontWeight('bold');
+    h.getRange(2, 1, CONFIG_INICIAL.length, 3).setValues(CONFIG_INICIAL);
+    h.setFrozenRows(1);
+    h.autoResizeColumns(1, 3);
+  }
+  return h;
+}
+
+function hojaPuntos_() {
+  const ss = ss_();
+  let h = ss.getSheetByName('Puntos');
+  if (!h) {
+    h = ss.insertSheet('Puntos');
+    h.getRange(1, 1, 1, 4).setValues([['nombre', 'minimo', 'activo', 'detalle (dirección / horario)']]).setFontWeight('bold');
+    h.getRange(2, 1, PUNTOS_INICIALES.length, 4).setValues(PUNTOS_INICIALES);
+    h.setFrozenRows(1);
+  }
+  return h;
+}
 
 /** Mapa encabezado → número de columna (1-based). Crea columnas faltantes. */
 function columnas_(hoja) {
@@ -204,8 +229,8 @@ function guardarProducto(p) {
     }
 
     const valores = {
-      id: id, nombre: nombre, categoria: String(p.categoria || '').trim() || 'Otros',
-      descripcion: String(p.descripcion || '').trim(), medidas: String(p.medidas || '').trim(),
+      id: id, nombre: seguro_(nombre), categoria: seguro_(p.categoria) || 'Otros',
+      descripcion: seguro_(p.descripcion), medidas: seguro_(p.medidas),
       precio_unitario: numero_(p.precio_unitario), precio_pack_10: numero_(p.precio_pack_10) || '',
       precio_pack_20: numero_(p.precio_pack_20) || '',
       imagen_id: (p.imagenes || []).join('\n'),
@@ -276,7 +301,7 @@ function subirFoto(base64, nombre) {
    CONFIG Y PUNTOS
 ================================================================ */
 function leerConfig_() {
-  const h = SpreadsheetApp.getActive().getSheetByName('Config');
+  const h = hojaConfig_();
   const c = {};
   if (h && h.getLastRow() > 1) {
     h.getRange(2, 1, h.getLastRow() - 1, 2).getValues().forEach(([k, v]) => { if (String(k).trim()) c[String(k).trim()] = v; });
@@ -285,7 +310,7 @@ function leerConfig_() {
 }
 
 function leerPuntos_() {
-  const h = SpreadsheetApp.getActive().getSheetByName('Puntos');
+  const h = hojaPuntos_();
   if (!h || h.getLastRow() < 2) return [];
   return h.getRange(2, 1, h.getLastRow() - 1, 4).getValues()
     .filter(r => String(r[0]).trim())
@@ -294,22 +319,25 @@ function leerPuntos_() {
 
 function guardarConfig(config) {
   exigirAdmin_();
-  const h = SpreadsheetApp.getActive().getSheetByName('Config');
+  const h = hojaConfig_();
   const v = h.getRange(2, 1, Math.max(1, h.getLastRow() - 1), 2).getValues();
   Object.keys(config).forEach(k => {
+    // El WhatsApp se guarda como TEXTO: si no, la planilla lo muestra como 5,49E+12
+    let valor = typeof config[k] === 'string' ? seguro_(config[k]) : config[k];
+    if (k === 'whatsapp') valor = "'" + String(valor).replace(/\D/g, '');
     const i = v.findIndex(r => String(r[0]).trim() === k);
-    if (i !== -1) h.getRange(i + 2, 2).setValue(config[k]);
-    else h.appendRow([k, config[k], '']);
+    if (i !== -1) h.getRange(i + 2, 2).setValue(valor);
+    else h.appendRow([k, valor, '']);
   });
   return leerConfig_();
 }
 
 function guardarPuntos(puntos) {
   exigirAdmin_();
-  const h = SpreadsheetApp.getActive().getSheetByName('Puntos');
+  const h = hojaPuntos_();
   if (h.getLastRow() > 1) h.getRange(2, 1, h.getLastRow() - 1, 4).clearContent();
   const filas = (puntos || []).filter(p => String(p.nombre || '').trim())
-    .map(p => [String(p.nombre).trim(), numero_(p.minimo), p.activo === false ? 'NO' : 'SI', String(p.detalle || '')]);
+    .map(p => [seguro_(p.nombre), numero_(p.minimo), p.activo === false ? 'NO' : 'SI', seguro_(p.detalle)]);
   if (filas.length) h.getRange(2, 1, filas.length, 4).setValues(filas);
   return leerPuntos_();
 }
@@ -399,6 +427,12 @@ function numero_(v) {
   if (sep > -1 && s.length - sep - 1 <= 2) s = s.slice(0, sep).replace(/[.,]/g, '') + '.' + s.slice(sep + 1);
   else s = s.replace(/[.,]/g, '');
   return Math.floor(Number(s) || 0);
+}
+
+/** Un texto que empieza con = + - @ lo toma la planilla como fórmula ("+ Maceta" daba #ERROR!). */
+function seguro_(v) {
+  const s = String(v == null ? '' : v).trim();
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 
 function slug_(s) {

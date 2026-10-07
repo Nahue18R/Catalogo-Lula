@@ -1,0 +1,17 @@
+# Publicación en Netlify.
+#
+# Solo se publica lo que el sitio necesita: así quedan AFUERA los scripts de
+# Google (apps-script/, con mails y IDs), las guías, CLAUDE.md y el logo
+# original de 6 MB. Si algún día se agrega un archivo que el sitio usa
+# (otra imagen, otro .js), hay que sumarlo a la lista del comando.
+
+[build]
+  command = "mkdir -p dist && cp index.html style.css script.js logo-header.png favicon.png og-image.jpg dist/"
+  publish = "dist"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

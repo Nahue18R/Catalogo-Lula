@@ -19,8 +19,10 @@ Para probarlo en tu celular, conectado al mismo wifi, abrí `http://IP-DE-TU-PC:
 **Netlify, conectado al repositorio de GitHub** (recomendado):
 
 1. Entrá a app.netlify.com → **Add new site → Import an existing project → GitHub** y elegí el repositorio (puede ser privado).
-2. Build command: vacío. Publish directory: `.` (la raíz).
+2. No hace falta completar nada: el comando de build y la carpeta a publicar ya están en `netlify.toml`. Solo se publican los archivos del sitio (quedan afuera `apps-script/`, las guías y el logo original de 6 MB).
 3. Cada cambio que subas a GitHub se publica solo.
+
+Si más adelante el sitio usa un archivo nuevo (otra imagen, otro `.js`), hay que sumarlo al comando `cp` de `netlify.toml`, o no se publica.
 
 Antes de la primera publicación:
 - En `index.html`, cambiá `og:image` por la dirección completa, por ejemplo `https://lulalujan.netlify.app/og-image.jpg`. Con una ruta relativa, WhatsApp no muestra la vista previa del link.

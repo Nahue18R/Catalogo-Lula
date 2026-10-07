@@ -24,164 +24,8 @@
    (ver cargarProductos). CSV_EMERGENCIA es la copia embebida que se
    usa si la planilla no responde y no hay copia guardada.
 ================================================================ */
-const PRODUCTOS = [
-  {
-    id: 1,
-    nombre: 'Virgen de Luján',
-    categoria: 'Santería',
-    descripcion: 'Virgen de Luján pintada a mano con colores tradicionales celeste y blanco.',
-    medidas: '20 cm',
-    precio_unitario:  2800,
-    precio_pack_10:  24000,
-    precio_pack_20:  44000,
-    imagen_id: 'mary',
-    activo: true,
-    destacado: true,
-  },
-  {
-    id: 2,
-    nombre: 'San Expedito',
-    categoria: 'Santería',
-    descripcion: 'Figura de yeso de San Expedito con base decorada en rojo y detalles dorados.',
-    medidas: '18 cm',
-    precio_unitario:  2500,
-    precio_pack_10:  22000,
-    precio_pack_20:  40000,
-    imagen_id: 'angel',
-    activo: true,
-    destacado: true,
-  },
-  {
-    id: 3,
-    nombre: 'Maceta Rústica',
-    categoria: 'Macetas',
-    descripcion: 'Maceta de yeso texturizada estilo rústico, ideal para plantas de interior.',
-    medidas: '15 cm de diámetro',
-    precio_unitario:  1800,
-    precio_pack_10:  15500,
-    precio_pack_20:  28000,
-    imagen_id: 'plant',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 4,
-    nombre: 'Maceta Corazón',
-    categoria: 'Macetas',
-    descripcion: 'Maceta con forma de corazón pintada en colores pastel, perfecta para regalar.',
-    medidas: '12 cm',
-    precio_unitario:  2200,
-    precio_pack_10:  19000,
-    precio_pack_20:  35000,
-    imagen_id: 'heart',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 5,
-    nombre: 'Souvenir Mini Novia',
-    categoria: 'Souvenirs',
-    descripcion: 'Figura de novia en miniatura, ideal para bodas y 15 años. Personalizable.',
-    medidas: '8 cm',
-    precio_unitario:   900,
-    precio_pack_10:   7500,
-    precio_pack_20:  13000,
-    imagen_id: 'bride',
-    activo: true,
-    destacado: true,
-  },
-  {
-    id: 6,
-    nombre: 'Souvenir Mini Novio',
-    categoria: 'Souvenirs',
-    descripcion: 'Figura de novio en miniatura para souvenirs de bodas y 15 años.',
-    medidas: '8 cm',
-    precio_unitario:   900,
-    precio_pack_10:   7500,
-    precio_pack_20:  13000,
-    imagen_id: 'groom',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 7,
-    nombre: 'Gauchito Gil',
-    categoria: 'Santería',
-    descripcion: 'Figura del Gauchito Gil con detalle de bandera roja y detalles al óleo.',
-    medidas: '22 cm',
-    precio_unitario:  3200,
-    precio_pack_10:  28000,
-    precio_pack_20:  52000,
-    imagen_id: 'gaucho',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 8,
-    nombre: 'Marco Floral Vintage',
-    categoria: 'Decoración',
-    descripcion: 'Marco decorativo con relieve floral vintage. Ideal para fotos o espejos.',
-    medidas: '25 × 30 cm',
-    precio_unitario:  3500,
-    precio_pack_10:  30000,
-    precio_pack_20:  56000,
-    imagen_id: 'frame',
-    activo: false,  // agotado/pausado → irá al final con opacidad reducida
-    destacado: false,
-  },
-  {
-    id: 9,
-    nombre: 'Ángel Custodio',
-    categoria: 'Santería',
-    descripcion: 'Ángel de la guarda con relieve dorado, pintado a mano sobre yeso premium.',
-    medidas: '16 cm',
-    precio_unitario:  2600,
-    precio_pack_10:  23000,
-    precio_pack_20:  42000,
-    imagen_id: 'angel2',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 10,
-    nombre: 'Souvenir Cigüeña',
-    categoria: 'Souvenirs',
-    descripcion: 'Cigüeña decorativa para baby shower y recuerditos de nacimiento. Personalizable.',
-    medidas: '10 cm',
-    precio_unitario:  1100,
-    precio_pack_10:   9000,
-    precio_pack_20:  16500,
-    imagen_id: 'stork',
-    activo: true,
-    destacado: false,
-  },
-  {
-    id: 11,
-    nombre: 'Maceta Elefante',
-    categoria: 'Macetas',
-    descripcion: 'Maceta con forma de elefante, símbolo de buena suerte y abundancia.',
-    medidas: '14 cm',
-    precio_unitario:  2400,
-    precio_pack_10:  21000,
-    precio_pack_20:  38000,
-    imagen_id: 'elephant',
-    activo: false,  // agotado/pausado
-    destacado: false,
-  },
-  {
-    id: 12,
-    nombre: 'Muñequita Quinceañera',
-    categoria: 'Souvenirs',
-    descripcion: 'Figura de 15 años pintada a mano en yeso. Color de vestido personalizable.',
-    medidas: '9 cm',
-    precio_unitario:  1000,
-    precio_pack_10:   8500,
-    precio_pack_20:  15000,
-    imagen_id: 'quince',
-    activo: true,
-    destacado: true,
-  },
-];
+/** Se llena al cargar (planilla, copia guardada o respaldo embebido). */
+const PRODUCTOS = [];
 
 /* ================================================================
    1 bis. RESPALDO EMBEBIDO DEL CATÁLOGO (copia de la planilla)
@@ -227,18 +71,18 @@ BandejaMacetitasPorta,Bandeja + Macetitas/Porta vela + Porta sahumerios,Combo,"B
 31,Bandeja + Alajero Ángeles + PS Angelito,Combo,"Bandeja, alajero ángeles y PS angelito","BDJ 17cm, Alajero 7.8x8cm, PS 5x5cm","$1,550","$13,000","$24,000",,SI,
 32,Bandeja Loto + Caramelera + Caracol + Florero,Combo,"Bandeja redonda loto, caramelera, caracol y florero gordito","BDJ 19cm, Caramelera 10x8cm, Caracol 11x4.5cm, Florero 10cm","$2,500","$23,000","$42,000",,SI,
 33,Bandeja Loto + Florero + Arcoíris + PS,Combo,"Bandeja redonda loto, florero gordito, deco arcoíris XL y PS loto mediano","BDJ 19cm, Florero 10cm, Arcoíris 14.5cm","$2,600","$24,000","$44,000",,SI,
-34,Virgen de Luján,Santería,Virgen de Luján pintada a mano con colores tradicionales celeste y blanco.,20 cm,"$2,800","$24,000","$44,000",,SI,SI
+34,Virgen de Luján,Santería,"Virgen de Luján en yeso, lista para pintar con los colores tradicionales celeste y blanco.",20 cm,"$2,800","$24,000","$44,000",,SI,SI
 35,San Expedito,Santería,Figura de yeso de San Expedito con base decorada en rojo y detalles dorados.,18 cm,"$2,500","$22,000","$40,000",,SI,SI
 36,Maceta Rústica,Macetas,"Maceta de yeso texturizada estilo rústico, ideal para plantas de interior.",15 cm de diámetro,"$1,800","$15,500","$28,000",,SI,NO
-37,Maceta Corazón,Macetas,"Maceta con forma de corazón pintada en colores pastel, perfecta para regalar.",12 cm,"$2,200","$19,000","$35,000",,SI,NO
+37,Maceta Corazón,Macetas,"Maceta de yeso con forma de corazón, lista para pintar en los colores que quieras. Ideal para regalar.",12 cm,"$2,200","$19,000","$35,000",,SI,NO
 38,Souvenir Mini Novia,Souvenirs,"Figura de novia en miniatura, ideal para bodas y 15 años. Personalizable.",8 cm,$900,"$7,500","$13,000",,SI,SI
 39,Souvenir Mini Novio,Souvenirs,Figura de novio en miniatura para souvenirs de bodas y 15 años.,8 cm,$900,"$7,500","$13,000",,SI,NO
-40,Gauchito Gil,Santería,Figura del Gauchito Gil con detalle de bandera roja y detalles al óleo.,22 cm,"$3,200","$28,000","$52,000",,SI,NO
+40,Gauchito Gil,Santería,"Figura del Gauchito Gil en yeso, lista para pintar: la bandera roja y los detalles los elegís vos.",22 cm,"$3,200","$28,000","$52,000",,SI,NO
 41,Marco Floral Vintage,Decoración,Marco decorativo con relieve floral vintage. Ideal para fotos o espejos.,25 x 30 cm,"$3,500","$30,000","$56,000",,NO,NO
-42,Ángel Custodio,Santería,"Ángel de la guarda con relieve dorado, pintado a mano sobre yeso premium.",16 cm,"$2,600","$23,000","$42,000",,SI,NO
+42,Ángel Custodio,Santería,"Ángel de la guarda en yeso con relieve, listo para pintar y dorar a tu gusto.",16 cm,"$2,600","$23,000","$42,000",,SI,NO
 43,Souvenir Cigüeña,Souvenirs,Cigüeña decorativa para baby shower y recuerditos de nacimiento. Personalizable.,10 cm,"$1,100","$9,000","$16,500",,SI,NO
 44,Maceta Elefante,Macetas,"Maceta con forma de elefante, símbolo de buena suerte y abundancia.",14 cm,"$2,400","$21,000","$38,000",,NO,NO
-45,Muñequita Quinceañera,Souvenirs,Figura de 15 años pintada a mano en yeso. Color de vestido personalizable.,9 cm,"$1,000","$8,500","$15,000",,SI,SI`;
+45,Muñequita Quinceañera,Souvenirs,"Figura de 15 años en yeso, lista para pintar. El color del vestido lo elegís vos.",9 cm,"$1,000","$8,500","$15,000",,SI,SI`;
 
 /* ================================================================
    2. ESTADO GLOBAL DE LA APLICACIÓN
@@ -388,7 +232,15 @@ const STORAGE_CONFIG = 'lula.config.v1';
 const STORAGE_SESION = 'lula.sesion.v1';
 
 /** Porcentaje de seña como texto ("10%") */
-const pctSena = () => `${Math.round(PORCENTAJE_SENA * 100)}%`;
+const pctSena = () => `${(PORCENTAJE_SENA * 100).toLocaleString('es-AR', { maximumFractionDigits: 2 })}%`;
+
+/**
+ * Seña en pesos: porcentaje sobre el total, redondeada hacia arriba.
+ * Con enteros (centésimas de punto) y no con total * 0.07: esa cuenta da
+ * 7.000000000000001 y el redondeo hacia arriba sumaba $1 de más.
+ */
+const calcularSena = (total) =>
+  Math.ceil((total * Math.round(PORCENTAJE_SENA * 10000)) / 10000);
 
 /** Datos del punto de encuentro elegido (o null) */
 const buscarPunto = (nombre) => PUNTOS_ENTREGA.find(p => p.nombre === nombre) || null;
@@ -457,6 +309,61 @@ const IMG_FALLBACK =
   "%3Ccircle cx='37' cy='38' r='7' fill='%23dcdcdc'/%3E" +
   "%3Cpath d='M22 70l18-22 12 14 10-11 16 19z' fill='%23dcdcdc'/%3E%3C/svg%3E";
 
+/* ----------------------------------------------------------------
+   RELLENO DE FOTOS POR CATEGORÍA
+   Mientras un producto no tiene foto, en vez de un cuadrado gris
+   se muestra un dibujo de su rubro y "Foto próximamente".
+   Son SVG armados acá (sin pedidos de red, funcionan sin conexión).
+---------------------------------------------------------------- */
+const ICONOS_CATEGORIA = {
+  // bandeja con maceta y porta sahumerio
+  combo: '<rect x="20" y="58" width="60" height="8" rx="4"/><path d="M33 58l2-14h12l2 14"/><path d="M41 44c0-8-4-10-6-12M41 44c0-8 4-10 6-12"/><rect x="58" y="47" width="12" height="11" rx="2"/><path d="M64 47l3-14"/>',
+  // caja con tapa y moño
+  box: '<rect x="26" y="42" width="48" height="26" rx="3"/><rect x="21" y="33" width="58" height="10" rx="3"/><path d="M50 33v35"/><path d="M50 33c-4-8-12-8-12-3s8 3 12 3zM50 33c4-8 12-8 12-3s-8 3-12 3z"/>',
+  // figura con aureola sobre una base
+  santeria: '<circle cx="50" cy="29" r="6.5"/><ellipse cx="50" cy="29" rx="13" ry="13" stroke-dasharray="2 3"/><path d="M39 66c0-15 4-23 11-23s11 8 11 23z"/><rect x="33" y="66" width="34" height="5" rx="2.5"/>',
+  // maceta con planta
+  macetas: '<rect x="30" y="44" width="40" height="7" rx="2.5"/><path d="M34 51h32l-4 19H38z"/><path d="M50 44V26M50 40c0-8-6-12-11-14M50 40c0-8 6-12 11-14"/>',
+  // corazón
+  souvenirs: '<path d="M50 70C28 54 28 36 40 32c6-2 10 3 10 6 0-3 4-8 10-6 12 4 12 22-10 38z"/>',
+  // marco con paisaje
+  decoracion: '<rect x="26" y="28" width="48" height="42" rx="2"/><rect x="33" y="35" width="34" height="28" rx="1"/><path d="M35 58l9-10 7 7 5-5 9 8"/><circle cx="58" cy="43" r="3"/>',
+  // figura genérica: un jarrón
+  generico: '<path d="M42 30h16M44 30c0 6-8 8-8 20 0 12 5 20 14 20s14-8 14-20c0-12-8-14-8-20"/>',
+};
+
+const _cachePlaceholder = {};
+
+/**
+ * Dibujo de relleno para un producto sin foto.
+ * @param {string} categoria
+ * @param {boolean} conTexto - "Foto próximamente" (se omite en miniaturas, donde no se lee)
+ */
+const placeholderCategoria = (categoria, conTexto = true) => {
+  const clave = norm(categoria);
+  const icono = ICONOS_CATEGORIA[clave] ? clave : 'generico';
+  const k = icono + (conTexto ? '+t' : '');
+  if (_cachePlaceholder[k]) return _cachePlaceholder[k];
+
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
+    `<rect width="100" height="100" fill="#f4eee6"/>` +
+    `<g transform="translate(0 ${conTexto ? -4 : 0})" fill="none" stroke="#a38358" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONOS_CATEGORIA[icono]}</g>` +
+    (conTexto ? `<text x="50" y="86" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="6.2" font-weight="600" letter-spacing=".6" fill="#7a5a30">FOTO PRÓXIMAMENTE</text>` : '') +
+    `</svg>`;
+  return (_cachePlaceholder[k] = 'data:image/svg+xml,' + encodeURIComponent(svg));
+};
+
+/** ¿El producto tiene al menos una foto cargada? */
+const tieneFoto = (p) => (String(p?.imagen_id ?? '').trim() ? 1 : 0);
+
+/**
+ * Foto de un producto, o el relleno de su categoría si todavía no tiene.
+ * Sirve también para los ítems del carrito (tienen imagen_id y categoria).
+ */
+const imagenProducto = (p, ancho = 400) =>
+  tieneFoto(p) ? getImageUrl(p.imagen_id, ancho) : placeholderCategoria(p?.categoria, ancho >= 300);
+
 /**
  * Construye la URL de la foto de un producto.
  *
@@ -508,7 +415,12 @@ const getImageUrl = (imagenId, ancho = 400) => {
  */
 const activarFallbackImagenes = (contenedor) => {
   contenedor.querySelectorAll('img').forEach(img => {
-    img.addEventListener('error', () => { img.src = IMG_FALLBACK; }, { once: true });
+    img.addEventListener('error', () => {
+      const ancho = Number(img.getAttribute('width')) || 0;
+      img.src = img.dataset.cat !== undefined
+        ? placeholderCategoria(img.dataset.cat, ancho >= 150)
+        : IMG_FALLBACK;
+    }, { once: true });
   });
 };
 
@@ -630,8 +542,13 @@ const guardarCarrito = () => {
  * pudo cambiar de precio, de nombre o darse de baja. Nunca confiamos en el
  * precio guardado en el storage, siempre lo releemos del catálogo actual.
  */
+/** Lo que cambió en el carrito guardado desde la última visita (para avisarle a la clienta). */
+const avisoCarrito = { quitados: 0, precios: 0 };
+
 const cargarCarrito = () => {
   let guardado = null;
+  avisoCarrito.quitados = 0;
+  avisoCarrito.precios  = 0;
 
   try {
     guardado = JSON.parse(localStorage.getItem(STORAGE_CARRITO) || 'null');
@@ -645,18 +562,25 @@ const cargarCarrito = () => {
     const producto = buscarProducto(item.productoId);
 
     // Descartamos productos borrados, pausados o con un tipo desconocido
-    if (!producto || !producto.activo || !PRECIO_POR_TIPO[item.tipo]) return acc;
+    if (!producto || !producto.activo || !PRECIO_POR_TIPO[item.tipo]) {
+      avisoCarrito.quitados++;
+      return acc;
+    }
 
-    const cantidad = Math.max(1, Math.floor(Number(item.cantidad) || 1));
+    // Tope de 99 también acá: un storage alterado no puede traer 1.000.000 de unidades
+    const cantidad = Math.min(99, Math.max(1, Math.floor(Number(item.cantidad) || 1)));
+    const precio   = getPrecio(producto, item.tipo);   // precio actual
+    if (Number(item.precio) > 0 && Number(item.precio) !== precio) avisoCarrito.precios++;
 
     acc.push({
       productoId: producto.id,
       nombre:     producto.nombre,              // nombre actual
       tipo:       item.tipo,
       tipoLabel:  TIPO_LABELS[item.tipo],
-      precio:     getPrecio(producto, item.tipo), // precio actual
+      precio,
       cantidad,
       imagen_id:  producto.imagen_id,
+      categoria:  producto.categoria,
     });
     return acc;
   }, []);
@@ -733,7 +657,9 @@ const desbloquearScroll = () => {
    el gesto/botón atrás los cierra en vez de sacar a la clienta del sitio.
 ================================================================ */
 const abrirEnHistorial = (modal) => {
-  if (history.state && history.state.modal === modal) return;
+  // Siempre se agrega una entrada. Antes se omitía si el estado "ya decía" lo
+  // mismo, y un estado viejo (por recargar la página con un panel abierto)
+  // hacía que cerrar el panel retrocediera de página en vez de cerrarlo.
   history.pushState({ modal }, '');
 };
 
@@ -741,14 +667,54 @@ const cerrarEnHistorial = (modal) => {
   if (history.state && history.state.modal === modal) history.back();
 };
 
-window.addEventListener('popstate', () => {
-  const det = document.getElementById('product-detail');
-  if (det && det.classList.contains('open')) { cerrarProducto(true); return; }
-  const cart = document.getElementById('cart-panel');
-  if (cart && cart.classList.contains('open')) { cerrarCarrito(true); return; }
-  const cuenta = document.getElementById('cuenta-panel');
-  if (cuenta && cuenta.classList.contains('open')) cerrarCuenta(true);
+/**
+ * Espera a que el navegador termine de procesar un "atrás" antes de abrir otro
+ * panel (ficha → carrito, carrito → cuenta). Antes se esperaban 60 ms a ojo.
+ */
+const esperarHistorial = () => new Promise((resolver) => {
+  const listo = () => { window.removeEventListener('popstate', listo); clearTimeout(t); resolver(); };
+  const t = setTimeout(listo, 150);   // por si no hay "atrás" que esperar
+  window.addEventListener('popstate', listo);
 });
+
+const PANEL_DE = { ficha: 'product-detail', carrito: 'cart-panel', cuenta: 'cuenta-panel' };
+const panelAbierto = (id) => !!document.getElementById(id)?.classList.contains('open');
+
+/** El historial manda: se cierra todo panel que no sea el de la entrada actual. */
+window.addEventListener('popstate', () => {
+  const m = history.state && history.state.modal;
+  if (m !== 'ficha'   && panelAbierto(PANEL_DE.ficha))   cerrarProducto(true);
+  if (m !== 'carrito' && panelAbierto(PANEL_DE.carrito)) cerrarCarrito(true);
+  if (m !== 'cuenta'  && panelAbierto(PANEL_DE.cuenta))  cerrarCuenta(true);
+  // Entrada "fantasma" (se avanzó hacia un panel que ya no está abierto): se
+  // limpia, si no el próximo cierre sacaría a la clienta de la página.
+  if (m && PANEL_DE[m] && !panelAbierto(PANEL_DE[m])) history.replaceState(null, '');
+});
+
+/* ================================================================
+   AISLAR EL FONDO MIENTRAS HAY UN PANEL ABIERTO
+   Con el atributo "inert" el resto de la página no se puede tabular, ni
+   leer con lector de pantalla, ni tocar con el teclado: sin esto, con el
+   carrito abierto el Tab se escapaba a los productos de atrás. Al cerrar,
+   el foco vuelve al botón que abrió el panel.
+================================================================ */
+let focoPrevio = null;
+
+const aislarFondo = (panel) => {
+  focoPrevio = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  document.querySelectorAll('body > *').forEach((el) => {
+    const conservar = el === panel || el.contains(panel) ||
+      ['cart-overlay', 'filtros-overlay', 'toast'].includes(el.id) ||
+      el.tagName === 'SCRIPT';
+    el.toggleAttribute('inert', !conservar);
+  });
+};
+
+const restaurarFondo = () => {
+  document.querySelectorAll('body > [inert]').forEach((el) => el.removeAttribute('inert'));
+  if (focoPrevio && document.contains(focoPrevio)) focoPrevio.focus({ preventScroll: true });
+  focoPrevio = null;
+};
 
 /* ================================================================
    4 bis. VISTA INICIO Y NAVEGACIÓN (home estilo The Ancient Home)
@@ -853,7 +819,7 @@ const tarjetaInicio = (p) => {
       <button type="button" class="home-card-open" data-abrir="${p.id}" aria-label="Ver detalle de ${nom}">
         <span class="home-card-img-wrap">
           ${badge}
-          <img src="${getImageUrl(p.imagen_id)}" alt="Foto de ${nom}" loading="lazy" width="400" height="400" />
+          <img src="${esc(imagenProducto(p))}" data-cat="${esc(p.categoria)}" alt="Foto de ${nom}" loading="lazy" width="400" height="400" />
           ${overlay}
         </span>
         <span class="home-card-category">${esc(p.categoria)}</span>
@@ -871,7 +837,10 @@ const renderHomeDestacados = () => {
   if (!cont) return;
 
   const destacados = PRODUCTOS.filter(p => p.activo && p.destacado);
+  // Los que ya tienen foto van primero: el inicio es lo primero que se ve
   const lista = (destacados.length ? destacados : PRODUCTOS.filter(p => p.activo))
+    .slice()
+    .sort((a, b) => tieneFoto(b) - tieneFoto(a))
     .slice(0, 8);
 
   cont.innerHTML = lista.map(tarjetaInicio).join('');
@@ -891,7 +860,7 @@ const renderHomeCategorias = () => {
     return `
       <button type="button" class="home-cat" data-cat="${esc(cat)}" aria-label="Ver categoría ${esc(cat)}">
         <span class="home-cat-img">
-          <img src="${getImageUrl(conFoto ? conFoto.imagen_id : '')}" alt="" loading="lazy" width="400" height="300" />
+          <img src="${esc(imagenProducto(conFoto || { categoria: cat }))}" data-cat="${esc(cat)}" alt="" loading="lazy" width="400" height="300" />
         </span>
         <span class="home-cat-body">
           <strong>${esc(cat)}</strong>
@@ -900,6 +869,8 @@ const renderHomeCategorias = () => {
       </button>
     `;
   }).join('');
+
+  activarFallbackImagenes(cont);
 
   cont.querySelectorAll('.home-cat').forEach(btn =>
     btn.addEventListener('click', () => irALaTienda(btn.dataset.cat))
@@ -1001,7 +972,7 @@ const getProductosFiltrados = () => {
         case 'precio-asc':  return a.precio_unitario - b.precio_unitario;
         case 'precio-desc': return b.precio_unitario - a.precio_unitario;
         case 'nombre':      return a.nombre.localeCompare(b.nombre, 'es');
-        default:            return Number(b.destacado) - Number(a.destacado);
+        default:            return (Number(b.destacado) - Number(a.destacado)) || (tieneFoto(b) - tieneFoto(a));
       }
     });
 };
@@ -1106,7 +1077,8 @@ const tarjetaCompra = (p) => {
       >
         ${badge}
         <img
-          src="${getImageUrl(p.imagen_id)}"
+          src="${esc(imagenProducto(p))}"
+          data-cat="${esc(p.categoria)}"
           alt="Foto de ${nom}"
           class="product-img"
           loading="lazy"
@@ -1167,7 +1139,8 @@ const tarjetaLista = (p) => {
       >
         ${badge}
         <img
-          src="${getImageUrl(p.imagen_id)}"
+          src="${esc(imagenProducto(p))}"
+          data-cat="${esc(p.categoria)}"
           alt="Foto de ${nom}"
           class="product-img"
           loading="lazy"
@@ -1416,6 +1389,11 @@ const actualizarVisualPrecio = () => {
 
   range.style.setProperty('--fill-from', `${pct(Number(min.value))}%`);
   range.style.setProperty('--fill-to',   `${pct(Number(max.value))}%`);
+
+  // Si los dos pulgares quedan juntos del lado derecho, el de "máximo" tapa al
+  // de "mínimo" y no se podía volver a agarrar. Se pasa el de mínimo al frente.
+  min.style.zIndex = Number(min.value) > (lo + hi) / 2 ? '3' : '2';
+  max.style.zIndex = '2';
 };
 
 /** Sincroniza inputs y sliders de precio con el estado actual. */
@@ -1727,6 +1705,7 @@ const pushAlCarrito = (producto, tipo, cantidad = 1) => {
       precio,
       cantidad,
       imagen_id:  producto.imagen_id,
+      categoria:  producto.categoria,
     });
   }
 
@@ -1819,6 +1798,13 @@ const actualizarUIGlobal = () => {
     badge.classList.add('hidden');
   }
 
+  // Nombre accesible: un aria-label sobre el numerito (un <span>) no lo lee nadie
+  const etiquetaCarrito = cantItems > 0
+    ? `Ver carrito, ${cantItems} producto${cantItems === 1 ? '' : 's'}, total ${formatCurrency(total)}`
+    : 'Ver carrito, vacío';
+  document.getElementById('btn-ver-carrito')?.setAttribute('aria-label', etiquetaCarrito);
+  document.getElementById('btn-ver-carrito-top')?.setAttribute('aria-label', etiquetaCarrito);
+
   // Total y badge en el acceso al carrito del header
   const totTop = document.getElementById('cart-total-top');
   if (totTop) totTop.textContent = formatCurrency(total);
@@ -1854,7 +1840,7 @@ const actualizarUIGlobal = () => {
  */
 const renderCarrito = () => {
   const total  = calcularTotal();
-  const sena   = Math.ceil(total * PORCENTAJE_SENA);
+  const sena   = calcularSena(total);
   const resto  = total - sena;
 
   const itemsContainer   = document.getElementById('cart-items-container');
@@ -1884,7 +1870,8 @@ const renderCarrito = () => {
     return `
     <div class="cart-item">
       <img
-        src="${esc(getImageUrl(item.imagen_id, 160))}"
+        src="${esc(imagenProducto(item, 160))}"
+        data-cat="${esc(item.categoria || '')}"
         alt="${nom}"
         class="cart-item-img"
         loading="lazy"
@@ -1968,6 +1955,7 @@ const abrirCarrito = () => {
   renderCarrito();
   if (panel.classList.contains('open')) return;
 
+  aislarFondo(panel);
   panel.classList.add('open');
   overlay.classList.add('visible');
   bloquearScroll();
@@ -1992,6 +1980,7 @@ const cerrarCarrito = (desdeHistorial = false) => {
   panel.classList.remove('open');
   overlay.classList.remove('visible');
   desbloquearScroll();
+  restaurarFondo();
   if (desdeHistorial !== true) cerrarEnHistorial('carrito');
   btnVer.setAttribute('aria-expanded', 'false');
 };
@@ -2023,7 +2012,7 @@ const relucharCard = (p) => {
     <article class="product-card rel-card ${p.activo ? '' : 'agotado'}">
       <button type="button" class="card-open rel-open" data-abrir="${p.id}" aria-label="Ver detalle de ${nom}">
         <span class="rel-img-wrap">
-          <img src="${getImageUrl(p.imagen_id)}" alt="Foto de ${nom}" loading="lazy" width="400" height="400" />
+          <img src="${esc(imagenProducto(p))}" data-cat="${esc(p.categoria)}" alt="Foto de ${nom}" loading="lazy" width="400" height="400" />
         </span>
         <span class="rel-name">${nom}</span>
         <span class="detail-price rel-price">${formatCurrency(p.precio_unitario)}</span>
@@ -2063,7 +2052,8 @@ const renderDetalle = () => {
     ? producto.imagenes
     : [producto.imagen_id]).filter(Boolean);
 
-  const fotoPrincipal = fotos.length ? getImageUrl(fotos[0], 1000) : getImageUrl('');
+  const sinFoto = fotos.length === 0;
+  const fotoPrincipal = sinFoto ? imagenProducto(producto, 1000) : getImageUrl(fotos[0], 1000);
 
   const miniaturas = fotos.length > 1
     ? `<div class="detail-thumbs" role="group" aria-label="Galería de fotos del producto">
@@ -2080,16 +2070,21 @@ const renderDetalle = () => {
         <div class="detail-images">
           <div class="detail-image-wrap">
             ${badge}
-            <img src="${esc(fotoPrincipal)}" alt="Foto de ${nom}" class="detail-img" id="detail-img" width="520" height="520" />
+            <img src="${esc(fotoPrincipal)}" data-cat="${esc(producto.categoria)}" alt="Foto de ${nom}" class="detail-img" id="detail-img" width="520" height="520" />
             ${overlay}
             ${miniaturas}
           </div>
+          ${sinFoto ? `<p class="detail-sinfoto">Todavía no tenemos foto de este producto. <a href="https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(`Hola Lula! ¿Me mandás una foto de "${producto.nombre}"?`)}" target="_blank" rel="noopener noreferrer">Pedila por WhatsApp</a></p>` : ''}
         </div>
 
         <div class="detail-info">
           <span class="detail-category">${cats}</span>
           <h1 class="detail-name">${nom}</h1>
           <p class="detail-sinpintar">Figura de yeso sin pintar, lista para pintar</p>
+          <button type="button" class="detail-share" id="btn-compartir">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Compartir este producto
+          </button>
           ${med ? `<p class="detail-measures"><strong>Medidas:</strong> ${med}</p>` : ''}
 
           <div class="detail-price-row">
@@ -2176,6 +2171,7 @@ const abrirProducto = (id) => {
 
   const overlay = document.getElementById('product-detail');
   if (!overlay.classList.contains('open')) {
+    aislarFondo(overlay);
     overlay.classList.add('open');
     bloquearScroll();
     abrirEnHistorial('ficha');
@@ -2191,12 +2187,68 @@ const abrirProducto = (id) => {
   }, 350);
 };
 
+/** Link directo a un producto: el catálogo + ?p=id (se abre la ficha al entrar). */
+const urlDeProducto = (p) => {
+  const u = new URL(location.href);
+  u.search = '';
+  u.hash = '';
+  u.searchParams.set('p', String(p.id));
+  return u.toString();
+};
+
+/** Comparte el producto: hoja de compartir del celular o, si no hay, copia el link. */
+const compartirProducto = async () => {
+  const p = buscarProducto(state.productoActivo);
+  if (!p) return;
+  const url    = urlDeProducto(p);
+  const titulo = `${p.nombre} · Lula Luján Creaciones`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: titulo, text: titulo, url });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;   // la clienta cerró la hoja
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (err) {
+    // Sin permiso de portapapeles (http o navegador viejo): copia con un campo temporal
+    const t = document.createElement('textarea');
+    t.value = url;
+    t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(t);
+    t.select();
+    try { document.execCommand('copy'); } catch (e2) { /* nada más que hacer */ }
+    t.remove();
+  }
+  mostrarToast('Link copiado. Pegalo donde quieras.');
+};
+
+let enlaceProductoAtendido = false;
+
+/** Si la página se abrió con ?p=id, muestra esa ficha apenas hay catálogo. */
+const abrirProductoDesdeURL = () => {
+  if (enlaceProductoAtendido) return;
+  const id = new URLSearchParams(location.search).get('p');
+  if (!id) { enlaceProductoAtendido = true; return; }
+  const p = buscarProducto(id);
+  // Si todavía no está (copia guardada vieja), se reintenta cuando llegue la planilla
+  if (!p) return;
+  enlaceProductoAtendido = true;
+  abrirProducto(p.id);
+};
+
 /** Cierra el detalle y restaura el scroll del fondo. */
 const cerrarProducto = (desdeHistorial = false) => {
   const overlay = document.getElementById('product-detail');
   if (!overlay.classList.contains('open')) return;
   overlay.classList.remove('open');
   desbloquearScroll();
+  restaurarFondo();
   if (desdeHistorial !== true) cerrarEnHistorial('ficha');
   state.productoActivo = null;
 };
@@ -2228,6 +2280,11 @@ const manejarClickDetalle = (e) => {
   const addBtn = e.target.closest('#btn-detail-add');
   if (addBtn) {
     agregarDetalleAlCarrito();
+    return;
+  }
+
+  if (e.target.closest('#btn-compartir')) {
+    compartirProducto();
     return;
   }
 };
@@ -2418,7 +2475,7 @@ const generarNumeroPedido = () => {
 
 const generarMensajeWhatsApp = (nombre, telefono, punto, numero = '') => {
   const total = calcularTotal();
-  const sena  = Math.ceil(total * PORCENTAJE_SENA);
+  const sena  = calcularSena(total);
   const resto = total - sena;
 
   // Separar items en dos grupos para el mensaje
@@ -2876,6 +2933,26 @@ const montarCatalogo = () => {
   actualizarUIGlobal();
   mostrarEstadoCatalogo('listo');
   mostrarAvisosPlanilla();
+  abrirProductoDesdeURL();
+  avisarCambiosCarrito();
+};
+
+/**
+ * Si desde la última visita un producto del carrito se pausó o cambió de precio,
+ * se le dice a la clienta. Antes se corregía en silencio y el carrito
+ * aparecía distinto sin explicación.
+ */
+const avisarCambiosCarrito = () => {
+  const { quitados, precios } = avisoCarrito;
+  avisoCarrito.quitados = 0;
+  avisoCarrito.precios  = 0;
+  if (!quitados && !precios) return;
+
+  const partes = [];
+  if (quitados) partes.push(`${quitados} producto${quitados === 1 ? '' : 's'} de tu carrito ya no ${quitados === 1 ? 'está disponible' : 'están disponibles'}`);
+  if (precios)  partes.push(`cambió el precio de ${precios === 1 ? 'un producto' : precios + ' productos'}`);
+  const texto = partes.join(' y ');
+  mostrarToast(texto.charAt(0).toUpperCase() + texto.slice(1) + '.', 5500);
 };
 
 /** Panel de avisos de la planilla (solo con ?revisar en el link). */
@@ -2956,8 +3033,6 @@ const apiPost = async (accion, datos = {}, opciones = {}) => {
 };
 
 /* ---------- Config (pestañas Config y Puntos) ---------- */
-let textosSena = null;
-
 const aplicarConfig = (datos) => {
   if (!datos || !datos.config) return;
   const c = datos.config;
@@ -3183,11 +3258,12 @@ const enviarFormCuenta = async (e) => {
   }
 };
 
-const abrirCuenta = () => {
+const abrirCuenta = async () => {
   const panel = document.getElementById('cuenta-panel');
   if (!panel || panel.classList.contains('open')) return;
-  if (document.getElementById('cart-panel').classList.contains('open')) cerrarCarrito();
+  if (panelAbierto(PANEL_DE.carrito)) { cerrarCarrito(); await esperarHistorial(); }
   renderCuenta();
+  aislarFondo(panel);
   panel.classList.add('open');
   document.getElementById('cart-overlay').classList.add('visible');
   bloquearScroll();
@@ -3201,6 +3277,7 @@ const cerrarCuenta = (desdeHistorial = false) => {
   panel.classList.remove('open');
   document.getElementById('cart-overlay').classList.remove('visible');
   desbloquearScroll();
+  restaurarFondo();
   modoCuenta = 'ingresar';
   if (desdeHistorial !== true) cerrarEnHistorial('cuenta');
 };
@@ -3229,8 +3306,7 @@ const inicializarCuentas = () => {
   document.getElementById('checkout-cuenta')?.addEventListener('click', (e) => {
     if (!e.target.closest('[data-abrir-cuenta]')) return;
     modoCuenta = 'crear';
-    cerrarCarrito();
-    setTimeout(abrirCuenta, 60);
+    abrirCuenta();   // cierra el carrito y espera al historial por su cuenta
   });
 
   actualizarBotonCuenta();
@@ -3245,6 +3321,10 @@ const inicializarCuentas = () => {
  * Configura todos los listeners y renderiza el estado inicial.
  */
 const init = () => {
+  /* --- Al recargar con un panel abierto, el navegador conserva su entrada del
+     historial pero el panel ya no está: se limpia para que cerrar no retroceda. --- */
+  if (history.state && history.state.modal) history.replaceState(null, '');
+
   /* --- Datos del cliente (no dependen del catálogo) --- */
   poblarPuntosEntrega();
   inicializarCuentas();
@@ -3329,13 +3409,7 @@ const init = () => {
   /* --- Clic en el logo también vuelve al inicio --- */
   const brandHome = document.getElementById('brand-home');
   if (brandHome) {
-    brandHome.addEventListener('click', irAInicio);
-    brandHome.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        irAInicio();
-      }
-    });
+    brandHome.addEventListener('click', (e) => { e.preventDefault(); irAInicio(); });
   }
 
   /* --- Botones del hero y "Ver todos" de la vista de inicio --- */
@@ -3423,10 +3497,10 @@ const init = () => {
   document.getElementById('btn-pedido-reintentar')?.addEventListener('click', enviarPedido);
 
   /* --- Carrito desde la ficha --- */
-  document.getElementById('btn-detalle-carrito')?.addEventListener('click', () => {
+  document.getElementById('btn-detalle-carrito')?.addEventListener('click', async () => {
     cerrarProducto();
-    // Esperar a que el historial procese el cierre de la ficha
-    setTimeout(abrirCarrito, 60);
+    await esperarHistorial();   // que el navegador termine el "atrás" de la ficha
+    abrirCarrito();
   });
 
   /* --- Envío del pedido --- */

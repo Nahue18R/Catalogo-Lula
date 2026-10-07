@@ -42,6 +42,9 @@ const DIAS_SESION = 90;
 ================================================================ */
 function configurar() {
   const ss = SpreadsheetApp.getActive();
+  // Se guarda el ID: en una web app instalada getActive() puede venir vacío,
+  // así que todo lo demás abre la planilla por ID (ver ss_).
+  PropertiesService.getScriptProperties().setProperty('SS_ID', ss.getId());
   crearHoja_(ss, HOJA_PEDIDOS, COLS_PEDIDOS);
   crearHoja_(ss, HOJA_CLIENTAS, COLS_CLIENTAS);
   crearHoja_(ss, HOJA_SESIONES, COLS_SESIONES);
@@ -50,6 +53,10 @@ function configurar() {
   const hp = ss.getSheetByName(HOJA_PEDIDOS);
   const regla = SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS, true).build();
   hp.getRange(2, COLS_PEDIDOS.indexOf('estado') + 1, hp.getMaxRows() - 1, 1).setDataValidation(regla);
+
+  // Toda planilla nueva trae una hoja vacía ("Hoja 1" / "Sheet1"): sobra
+  const vacia = ss.getSheets().find(h => /^(Hoja 1|Sheet ?1)$/.test(h.getName()) && h.getLastRow() === 0);
+  if (vacia && ss.getSheets().length > 1) ss.deleteSheet(vacia);
 
   // Las columnas técnicas de Clientas y Sesiones se ocultan para no tocarlas por error
   const hc = ss.getSheetByName(HOJA_CLIENTAS);
@@ -60,6 +67,12 @@ function configurar() {
   if (!props.getProperty('PIMIENTA')) props.setProperty('PIMIENTA', Utilities.getUuid() + Utilities.getUuid());
 
   Logger.log('Listo. Ahora: Implementar → Nueva implementación → App web.');
+}
+
+/** La planilla de pedidos, abierta por ID. */
+function ss_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SS_ID');
+  return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActive();
 }
 
 function crearHoja_(ss, nombre, columnas) {
@@ -161,12 +174,18 @@ function esSi_(v, siVacio) {
 ================================================================ */
 function registrarPedido_(d) {
   const p = d.pedido || {};
-  const tel = soloDigitos_(p.telefono);
+  const tel = normalizarTelefono_(p.telefono);
 
   // Validación básica: esto llega desde internet, no confiar en nada
   if (!/^LL-\d{6}-[A-Z0-9]{4}$/.test(String(p.numero || ''))) return { ok: false, error: 'Número inválido' };
   if (!Array.isArray(p.items) || !p.items.length || p.items.length > 60) return { ok: false, error: 'Pedido vacío' };
   if (tel.length < 8 || tel.length > 15) return { ok: false, error: 'Teléfono inválido' };
+
+  // "Intentar de nuevo" reenvía el MISMO número: se reconoce antes de contar el
+  // límite, para que reintentar no le gaste a la clienta sus pedidos de la hora.
+  if (buscarFila_(ss_().getSheetByName(HOJA_PEDIDOS), 'numero', p.numero, COLS_PEDIDOS)) {
+    return { ok: true, numero: p.numero, repetido: true };
+  }
 
   // Anti-abuso: 5 pedidos por teléfono por hora y 60 en total por hora
   if (!permitir_('ped:' + tel, 5, 3600) || !permitir_('ped:global', 60, 3600)) {
@@ -186,13 +205,12 @@ function registrarPedido_(d) {
   const verificado = totalSegunPlanilla_(items);
   const etiquetas = { unidad: 'Unidad', pack10: 'Pack x10', pack20: 'Pack x20' };
   const detalle = items.map(i => `${i.cantidad} × ${i.nombre} (${etiquetas[i.tipo]})`).join('\n');
-  const pct = Number((leerConfig_().config || {}).sena_porcentaje);
-  const sena = Math.ceil(total * ((pct >= 0 && pct <= 100 ? pct : 10) / 100));
+  const sena = calcularSena_(total, (leerConfig_().config || {}).sena_porcentaje);
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const h = SpreadsheetApp.getActive().getSheetByName(HOJA_PEDIDOS);
+    const h = ss_().getSheetByName(HOJA_PEDIDOS);
     // Idempotente: si el mismo número ya está (reintento), no se duplica
     if (buscarFila_(h, 'numero', p.numero, COLS_PEDIDOS)) return { ok: true, numero: p.numero, repetido: true };
 
@@ -236,7 +254,7 @@ function misPedidos_(d) {
   const clienteId = clienteDeToken_(d.token);
   if (!clienteId) return { ok: false, error: 'Tu sesión venció. Volvé a ingresar.', sesion: false };
 
-  const h = SpreadsheetApp.getActive().getSheetByName(HOJA_PEDIDOS);
+  const h = ss_().getSheetByName(HOJA_PEDIDOS);
   const v = h.getDataRange().getValues();
   const c = (n) => COLS_PEDIDOS.indexOf(n);
   const pedidos = v.slice(1)
@@ -249,7 +267,7 @@ function misPedidos_(d) {
     .reverse()
     .slice(0, 30);
 
-  const cli = buscarFila_(SpreadsheetApp.getActive().getSheetByName(HOJA_CLIENTAS), 'id', clienteId, COLS_CLIENTAS);
+  const cli = buscarFila_(ss_().getSheetByName(HOJA_CLIENTAS), 'id', clienteId, COLS_CLIENTAS);
   return { ok: true, pedidos: pedidos, nombre: cli ? cli.valores.nombre : '', telefono: cli ? String(cli.valores.telefono) : '' };
 }
 
@@ -257,7 +275,7 @@ function misPedidos_(d) {
    CUENTAS (WhatsApp + PIN)
 ================================================================ */
 function crearCuenta_(d) {
-  const tel = soloDigitos_(d.telefono);
+  const tel = normalizarTelefono_(d.telefono);
   const pin = String(d.pin || '');
   const nombre = texto_(d.nombre, 80);
   if (tel.length < 8 || tel.length > 15) return { ok: false, error: 'Revisá el número de WhatsApp.' };
@@ -268,7 +286,7 @@ function crearCuenta_(d) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const h = SpreadsheetApp.getActive().getSheetByName(HOJA_CLIENTAS);
+    const h = ss_().getSheetByName(HOJA_CLIENTAS);
     const existente = buscarFila_(h, 'telefono', tel, COLS_CLIENTAS);
     // Una cuenta con PIN borrado desde el panel se puede "reactivar" con PIN nuevo
     if (existente && existente.valores.pin_hash) {
@@ -291,22 +309,28 @@ function crearCuenta_(d) {
 }
 
 function ingresar_(d) {
-  const tel = soloDigitos_(d.telefono);
+  const tel = normalizarTelefono_(d.telefono);
   const pin = String(d.pin || '');
-  if (!permitir_('login:' + tel, 5, 900)) {
+  const claveIntentos = 'login:' + tel;
+  // Solo los intentos FALLIDOS cuentan: una clienta que entra bien desde su
+  // celular y su tablet no debería quedar bloqueada.
+  if (Number(CacheService.getScriptCache().get(claveIntentos) || 0) >= 5) {
     return { ok: false, error: 'Demasiados intentos. Esperá 15 minutos o pedile a Lula que te reinicie el PIN.' };
   }
-  const h = SpreadsheetApp.getActive().getSheetByName(HOJA_CLIENTAS);
+  const h = ss_().getSheetByName(HOJA_CLIENTAS);
   const cli = buscarFila_(h, 'telefono', tel, COLS_CLIENTAS);
   if (!cli || !cli.valores.pin_hash || hashPin_(cli.valores.sal, pin) !== cli.valores.pin_hash) {
+    const cache = CacheService.getScriptCache();
+    cache.put(claveIntentos, String(Number(cache.get(claveIntentos) || 0) + 1), 900);
     return { ok: false, error: 'WhatsApp o PIN incorrectos.' };
   }
+  CacheService.getScriptCache().remove(claveIntentos);
   h.getRange(cli.fila, COLS_CLIENTAS.indexOf('ultimo_acceso') + 1).setValue(new Date());
   return { ok: true, token: crearSesion_(cli.valores.id), nombre: cli.valores.nombre };
 }
 
 function cerrarSesion_(d) {
-  const h = SpreadsheetApp.getActive().getSheetByName(HOJA_SESIONES);
+  const h = ss_().getSheetByName(HOJA_SESIONES);
   const s = buscarFila_(h, 'token_hash', sha256_(String(d.token || '')), COLS_SESIONES);
   if (s) h.deleteRow(s.fila);
   return { ok: true };
@@ -315,13 +339,27 @@ function cerrarSesion_(d) {
 function crearSesion_(clienteId) {
   const token = Utilities.getUuid() + Utilities.getUuid();
   const expira = new Date(Date.now() + DIAS_SESION * 864e5);
-  SpreadsheetApp.getActive().getSheetByName(HOJA_SESIONES).appendRow([sha256_(token), clienteId, expira]);
+  const h = ss_().getSheetByName(HOJA_SESIONES);
+  if (h.getLastRow() > 200) limpiarSesionesVencidas_(h);   // si no, la hoja crece para siempre
+  h.appendRow([sha256_(token), clienteId, expira]);
   return token;
+}
+
+/** Borra las sesiones vencidas (de abajo hacia arriba, para no correr los índices). */
+function limpiarSesionesVencidas_(h) {
+  const ultima = h.getLastRow();
+  if (ultima < 2) return;
+  const idx = COLS_SESIONES.indexOf('expira');
+  const hoy = new Date();
+  const datos = h.getRange(2, 1, ultima - 1, COLS_SESIONES.length).getValues();
+  for (let i = datos.length - 1; i >= 0; i--) {
+    if (new Date(datos[i][idx]) < hoy) h.deleteRow(i + 2);
+  }
 }
 
 function clienteDeToken_(token) {
   if (!token) return '';
-  const s = buscarFila_(SpreadsheetApp.getActive().getSheetByName(HOJA_SESIONES), 'token_hash', sha256_(String(token)), COLS_SESIONES);
+  const s = buscarFila_(ss_().getSheetByName(HOJA_SESIONES), 'token_hash', sha256_(String(token)), COLS_SESIONES);
   if (!s || new Date(s.valores.expira) < new Date()) return '';
   return s.valores.cliente_id;
 }
@@ -363,7 +401,44 @@ function buscarFila_(hoja, columna, valor, cols) {
 }
 
 function soloDigitos_(v) { return String(v || '').replace(/\D/g, ''); }
-function texto_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max); }
+
+/**
+ * Deja el teléfono en su forma nacional de 10 dígitos (código de área + número),
+ * sin importar cómo lo escribió la clienta. Todas estas son la MISMA persona:
+ *   1134501054 · 11 3450-1054 · 011 3450 1054 · 011 15 3450-1054
+ *   +54 9 11 3450-1054 · 54 11 3450 1054
+ * Sin esto, quien creó la cuenta con una forma no podía ingresar con otra.
+ */
+function normalizarTelefono_(v) {
+  let d = soloDigitos_(v).replace(/^00/, '');
+  if (d.startsWith('54') && d.length > 10) d = d.slice(2);        // código de país
+  if (d.startsWith('9') && d.length === 11) d = d.slice(1);        // el 9 de los celulares (549…)
+  d = d.replace(/^0/, '');                                          // el 0 de larga distancia (011…)
+  if (d.length === 12) {                                            // con el "15": AA 15 NNNNNNNN
+    for (const area of [2, 3, 4]) {
+      if (d.slice(area, area + 2) === '15') { d = d.slice(0, area) + d.slice(area + 2); break; }
+    }
+  }
+  return d;
+}
+
+/**
+ * Seña en pesos: porcentaje sobre el total, redondeada hacia arriba.
+ * Con enteros (centésimas de punto) y no con total * 0.07: esa cuenta da
+ * 7.000000000000001 y el redondeo hacia arriba sumaba $1 de más.
+ */
+function calcularSena_(total, porcentaje) {
+  const pct = Number(porcentaje);
+  const centesimas = Math.round((pct >= 0 && pct <= 100 ? pct : 10) * 100);
+  return Math.ceil((total * centesimas) / 10000);
+}
+function texto_(v, max) {
+  const s = String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
+  // Una planilla toma como FÓRMULA todo lo que empieza con = + - @. Como esto lo
+  // escribe cualquiera desde internet, se lo marca como texto con un apóstrofe
+  // (la planilla no lo muestra): evita =HYPERLINK(...) / =IMPORTXML(...) en la hoja de la dueña.
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
 function slug_(s) {
   return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
