@@ -283,7 +283,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script>
+<script type="text/plain" id="app-src">
 'use strict';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -677,5 +677,42 @@ $('#lista-clientas').addEventListener('click', async (e) => {
   }
 })();
 </script>
+
+<script>
+/* Cargador con detector de errores.
+   El programa del panel va en la etiqueta de arriba (type text/plain) y se ejecuta desde acá.
+   Si algo falla, el error aparece EN PANTALLA con la línea exacta, sin tener que abrir la consola. */
+(function () {
+  var fuente = document.getElementById('app-src').textContent;
+  var caja = null;
+  function mostrar(titulo, detalle) {
+    if (!caja) {
+      caja = document.createElement('pre');
+      caja.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:99999;max-height:70vh;overflow:auto;margin:0;padding:12px;background:#fff3f2;color:#7a1a14;border:2px solid #b3261e;border-radius:10px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all';
+      document.body.appendChild(caja);
+    }
+    caja.textContent = titulo + '\n\n' + detalle;
+  }
+  function contexto(linea) {
+    var l = fuente.split('\n'), salida = [], i;
+    for (i = Math.max(0, linea - 4); i < Math.min(l.length, linea + 2); i++) {
+      salida.push((i + 1 === linea ? '>>> ' : '    ') + (i + 1) + ': ' + l[i].slice(0, 220));
+    }
+    return salida.join('\n');
+  }
+  window.addEventListener('error', function (e) {
+    if (e.target && e.target !== window) return;
+    mostrar('ERROR DEL PANEL (mandale una captura a Nahuel): ' + e.message,
+      'línea ' + e.lineno + ', columna ' + e.colno + '\n\n' + (e.lineno ? contexto(e.lineno) : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    mostrar('ERROR DEL PANEL (mandale una captura a Nahuel)', String(e.reason && e.reason.stack ? e.reason.stack : e.reason));
+  });
+  var el = document.createElement('script');
+  el.textContent = fuente;
+  document.body.appendChild(el);
+})();
+</script>
+
 </body>
 </html>
