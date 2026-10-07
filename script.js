@@ -226,7 +226,7 @@ let PUNTOS_ENTREGA = [
  * Vacía = el catálogo funciona igual, pero sin registro de pedidos,
  * sin cuentas y sin configuración remota. Ver guias/PANEL-Y-CUENTAS.md.
  */
-const API_URL = '';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzPDWgJMyX3mUePLgPt4jbSby_Z5vrvqahNYfHiCMmyo_MHFmCJyJcAxh4m4RrOApOE2w/exec';
 
 const STORAGE_CONFIG = 'lula.config.v1';
 const STORAGE_SESION = 'lula.sesion.v1';
