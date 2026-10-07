@@ -312,6 +312,18 @@ const miniatura = (url, ancho = 200) => {
   return /^https?:/.test(url) ? url : '';
 };
 
+/* Pedazos de HTML armados aparte: así ninguna plantilla (entre comillas invertidas) queda dentro de otra.
+   Dentro de Google el script no se ejecutaba con plantillas anidadas. */
+const htmlThumb = (p) => p.imagenes.length
+  ? '<img class="thumb" src="' + esc(miniatura(p.imagenes[0])) + '" alt="" loading="lazy">'
+  : '<div class="thumb"></div>';
+const htmlNota = (p) => p.notas ? '<div class="aviso-nota">' + esc(p.notas) + '</div>' : '';
+const htmlOpcionesEstado = (p) => {
+  let h = S.estados.indexOf(p.estado) === -1 ? '<option selected disabled>' + esc(p.estado || 'Sin estado') + '</option>' : '';
+  S.estados.forEach(e => { h += '<option' + (e === p.estado ? ' selected' : '') + '>' + esc(e) + '</option>'; });
+  return h;
+};
+
 /* ---------------- Navegación ---------------- */
 const irA = (vista) => {
   ['productos', 'pedidos', 'ajustes'].forEach(v => $('#vista-' + v).classList.toggle('hidden', v !== vista));
@@ -338,7 +350,7 @@ const pintarProductos = () => {
   if (!lista.length) { cont.innerHTML = '<div class="vacio">No hay productos con ese filtro.</div>'; return; }
   cont.innerHTML = lista.map(p => `
     <article class="item ${p.activo ? '' : 'pausado'}">
-      ${p.imagenes.length ? `<img class="thumb" src="${esc(miniatura(p.imagenes[0]))}" alt="" loading="lazy">` : '<div class="thumb"></div>'}
+      ${htmlThumb(p)}
       <button class="item-abrir" data-fila="${p.fila}">
         <div class="item-nombre">${esc(p.nombre)}</div>
         <div class="item-sub">${esc(p.categoria)} · ${plata(p.precio_unitario)}${p.imagenes.length ? '' : ' · sin foto'}</div>
@@ -532,11 +544,10 @@ const cargarPedidos = async () => {
         <div class="item-sub">${esc(p.punto)} · ${esc(p.telefono)}</div>
         <div class="pedido-detalle">${esc(p.detalle)}</div>
         <div class="pedido-totales"><span>Total <strong>${plata(p.total)}</strong></span><span>Seña ${plata(p.sena)}</span></div>
-        ${p.notas ? `<div class="aviso-nota">${esc(p.notas)}</div>` : ''}
+        ${htmlNota(p)}
         <div class="pedido-acciones">
           <select data-num="${esc(p.numero)}" aria-label="Estado del pedido ${esc(p.numero)}">
-            ${S.estados.indexOf(p.estado) === -1 ? `<option selected disabled>${esc(p.estado || 'Sin estado')}</option>` : ''}
-            ${S.estados.map(e => `<option ${e === p.estado ? 'selected' : ''}>${esc(e)}</option>`).join('')}
+            ${htmlOpcionesEstado(p)}
           </select>
           <a class="wa" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>
         </div>
